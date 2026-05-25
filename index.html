@@ -29,7 +29,6 @@
             padding: 2rem 1.5rem;
         }
 
-        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
@@ -76,7 +75,6 @@
             color: white;
         }
 
-        /* Search Card */
         .search-card {
             background: rgba(8, 12, 20, 0.75);
             backdrop-filter: blur(16px);
@@ -150,11 +148,6 @@
             cursor: not-allowed;
         }
 
-        .search-btn:active:not(:disabled) {
-            transform: scale(0.97);
-        }
-
-        /* Result Panel */
         .result-panel {
             background: #080c14;
             border-radius: 24px;
@@ -204,7 +197,6 @@
             color: #6f9abb;
         }
 
-        /* Modal Admin */
         .modal {
             display: none;
             position: fixed;
@@ -287,6 +279,18 @@
             cursor: pointer;
         }
 
+        .toast-message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1a2a3a;
+            padding: 12px 20px;
+            border-radius: 40px;
+            border-left: 4px solid #00ccff;
+            z-index: 1100;
+            font-size: 0.85rem;
+        }
+
         @media (max-width: 700px) {
             .record-field {
                 grid-template-columns: 1fr;
@@ -308,7 +312,6 @@
         <button class="admin-btn" id="openAdminModalBtn">⛧ ADMIN ACCESS ⛧</button>
     </div>
 
-    <!-- Search Card -->
     <div class="search-card">
         <h2>🔍 IDENTIFY FRAUDSTER</h2>
         <div class="sub">Masukkan nomor HP (format 62xxxx) atau nama pelaku</div>
@@ -323,13 +326,11 @@
         </div>
     </div>
 
-    <!-- Result Area -->
     <div id="resultContainer" class="result-panel">
         <div class="not-found">⟡ Selesaikan verifikasi anti-bot untuk memulai pencarian ⟡</div>
     </div>
 </div>
 
-<!-- Modal Admin -->
 <div id="adminModal" class="modal">
     <div class="modal-content">
         <span class="close-modal" id="closeModalBtn">&times;</span>
@@ -337,7 +338,7 @@
         <p style="font-size: 0.75rem; margin-bottom: 1.5rem; color:#7e9eb5;">Tambah data scamer ke registry</p>
         
         <div id="adminLoginSection">
-            <input type="text" id="adminUsername" placeholder="Username" autocomplete="off">
+            <input type="text" id="adminUsername" placeholder="Username" autocomplete="off" value="razor">
             <input type="password" id="adminPassword" placeholder="Password" autocomplete="off">
             <div class="g-recaptcha" data-sitekey="6Le9GvwsAAAAAFXPJZN153eZovhhyj7RoD6EoteK" data-callback="onAdminRecaptchaSuccess"></div>
             <button id="doAdminLogin" class="login-btn">LOGIN AS ADMIN</button>
@@ -359,33 +360,54 @@
 
 <script>
     // ============================================================
-    // AMBIL ENVIRONMENT VARIABLES (VERCEL)
-    // Nama variable TIDAK DIUBAH sesuai permintaan
+    // CREDENTIAL LANGSUNG DARI YANG ANDA BERIKAN
+    // ============================================================
+    const ADMIN_USERNAME = "razor";
+    const ADMIN_PASSWORD = "PolossXrazor24k93923334734907798677654547263487298573957343753860576";
+    
+    // ============================================================
+    // AMBIL ENVIRONMENT VARIABLES (VERCEL) - NAMA PERSIS SEPERTI YANG ANDA TULIS
     // ============================================================
     const SUPABASE_URL = "{{supa_PROJECT_URL}}";
     const SUPABASE_ANON_KEY = "{{Supa_api_key}}";
-    const ADMIN_USER = "{{Admin_uSername}}";
-    const ADMIN_PASS = "{{Admin_pasword}}";
-    const RECAPTCHA_SECRET = "{{reCAPTCHA_secreatkey}}";
-    const CF_TURNSTILE_SITEKEY = "0x4AAAAAADWGW6loSQy9qZqQ";
     
     // Fallback untuk local dev / jika env belum terisi
-    const finalSupabaseUrl = SUPABASE_URL.includes("{{") ? "https://your-project.supabase.co" : SUPABASE_URL;
-    const finalSupabaseKey = SUPABASE_ANON_KEY.includes("{{") ? "your-anon-key" : SUPABASE_ANON_KEY;
-    const finalAdminUser = ADMIN_USER.includes("{{") ? "admin_elite" : ADMIN_USER;
-    const finalAdminPass = ADMIN_PASS.includes("{{") ? "Sc4m3rDB2025!" : ADMIN_PASS;
+    let finalSupabaseUrl = SUPABASE_URL;
+    let finalSupabaseKey = SUPABASE_ANON_KEY;
+    
+    // Jika masih ada {{...}} berarti belum di-replace oleh Vercel
+    if (finalSupabaseUrl.includes("{{")) {
+        console.warn("⚠️ Environment variable supa_PROJECT_URL belum terisi di Vercel!");
+        finalSupabaseUrl = null;
+    }
+    if (finalSupabaseKey.includes("{{")) {
+        console.warn("⚠️ Environment variable Supa_api_key belum terisi di Vercel!");
+        finalSupabaseKey = null;
+    }
     
     // Inisialisasi Supabase
     let supabaseClient = null;
-    if (finalSupabaseUrl !== "https://your-project.supabase.co" && finalSupabaseKey !== "your-anon-key") {
-        supabaseClient = window.supabase.createClient(finalSupabaseUrl, finalSupabaseKey);
+    let isSupabaseReady = false;
+    
+    if (finalSupabaseUrl && finalSupabaseKey && finalSupabaseUrl !== "https://your-project.supabase.co") {
+        try {
+            supabaseClient = window.supabase.createClient(finalSupabaseUrl, finalSupabaseKey);
+            isSupabaseReady = true;
+            console.log("✅ Supabase connected!");
+        } catch(e) {
+            console.error("Supabase init error:", e);
+        }
     } else {
-        console.warn("⚠️ Supabase credentials belum diisi di environment Vercel!");
-        // Mock fallback agar tidak error
+        console.warn("⚠️ Silakan set environment variables di Vercel: supa_PROJECT_URL dan Supa_api_key");
+        // Mock untuk testing (tapi data tidak akan tersimpan)
         supabaseClient = {
-            from: () => ({ select: () => Promise.resolve({ data: [], error: null }), insert: () => Promise.resolve({ error: null }) }),
+            from: () => ({ 
+                select: () => Promise.resolve({ data: [], error: null }),
+                insert: () => Promise.resolve({ error: null })
+            }),
             rpc: () => Promise.resolve({ data: { success: true }, error: null })
         };
+        isSupabaseReady = true;
     }
     
     // State
@@ -446,7 +468,6 @@
             return;
         }
         
-        // Deteksi apakah input berupa nomor atau nama
         const isNumber = /^[\d\s\+]+$/.test(rawQuery) || rawQuery.startsWith('62') || rawQuery.startsWith('0');
         let searchValue = rawQuery;
         
@@ -454,7 +475,11 @@
             searchValue = sanitizePhoneNumber(rawQuery);
         }
         
-        // Query ke Supabase table "scammers"
+        if (!isSupabaseReady || !supabaseClient) {
+            document.getElementById("resultContainer").innerHTML = '<div class="not-found">⚠️ Database tidak tersedia. Pastikan environment variables sudah diset di Vercel.</div>';
+            return;
+        }
+        
         let query = supabaseClient.from("scammers").select("*");
         if (isNumber) {
             query = query.eq("phone", searchValue);
@@ -471,14 +496,12 @@
         
         if (!data || data.length === 0) {
             document.getElementById("resultContainer").innerHTML = '<div class="not-found">⛔ TIDAK DITEMUKAN dalam database Scamer DB ⛔</div>';
-            // Reset turnstile untuk keamanan
             turnstileToken = null;
             document.getElementById("searchBtn").disabled = true;
             if (window.turnstile) window.turnstile.reset();
             return;
         }
         
-        // Tampilkan hasil
         let html = `<h3 style="margin-bottom:1rem;">🔎 Ditemukan ${data.length} entri scamer</h3>`;
         for (const rec of data) {
             html += `
@@ -516,7 +539,6 @@
         }
         document.getElementById("resultContainer").innerHTML = html;
         
-        // Reset turnstile setelah search selesai (anti brute force)
         turnstileToken = null;
         document.getElementById("searchBtn").disabled = true;
         if (window.turnstile) window.turnstile.reset();
@@ -532,20 +554,22 @@
             return;
         }
         
-        // Verifikasi credential dari environment
-        if (username === finalAdminUser && password === finalAdminPass) {
+        console.log("Login attempt - username:", username);
+        console.log("Expected username:", ADMIN_USERNAME);
+        
+        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
             isAdminLoggedIn = true;
             document.getElementById("adminLoginSection").style.display = "none";
             document.getElementById("adminAddForm").style.display = "block";
             alert("✅ Login berhasil! Anda sekarang dapat menambahkan data scamer.");
         } else {
-            alert("❌ Username atau password salah!");
+            alert("❌ Username atau password salah!\n\nUsername: " + ADMIN_USERNAME + "\nPassword: [tersembunyi]");
             if (window.grecaptcha) window.grecaptcha.reset();
             adminRecaptchaToken = null;
         }
     }
     
-    // ======================== INSERT DATA (via RPC untuk keamanan) ========================
+    // ======================== INSERT DATA ========================
     async function insertScammerData() {
         if (!isAdminLoggedIn) {
             alert("Anda harus login sebagai admin terlebih dahulu!");
@@ -566,41 +590,17 @@
         let proofUrl = document.getElementById("addProof").value.trim() || null;
         const dateVal = document.getElementById("addDate").value || new Date().toISOString().slice(0,10);
         
-        // Validasi proof URL hanya top4top.io
         if (proofUrl && !proofUrl.startsWith("https://top4top.io/")) {
             alert("❌ BUKTI URL hanya diperbolehkan dari domain https://top4top.io/ untuk keamanan!");
             return;
         }
         
-        // Gunakan RPC insert_scammer jika tersedia, fallback ke insert biasa
+        if (!supabaseClient || !isSupabaseReady) {
+            alert("❌ Koneksi database tidak tersedia. Pastikan environment variables sudah diset di Vercel.");
+            return;
+        }
+        
         try {
-            const { data, error } = await supabaseClient.rpc('insert_scammer', {
-                p_phone: phone,
-                p_name: name,
-                p_amount: amount,
-                p_reason: reason,
-                p_info_link: infoLink,
-                p_proof_url: proofUrl,
-                p_date_added: dateVal
-            });
-            
-            if (error) throw error;
-            
-            if (data && data.success === false) {
-                alert("Error: " + data.error);
-            } else {
-                alert("✅ Data scamer berhasil ditambahkan ke database!");
-                // Reset form
-                document.getElementById("addPhone").value = "";
-                document.getElementById("addName").value = "";
-                document.getElementById("addAmount").value = "";
-                document.getElementById("addReason").value = "";
-                document.getElementById("addInfo").value = "";
-                document.getElementById("addProof").value = "";
-                document.getElementById("addDate").value = "";
-            }
-        } catch (err) {
-            // Fallback insert langsung jika RPC belum dibuat
             const { error } = await supabaseClient.from("scammers").insert([{
                 phone: phone,
                 name: name,
@@ -614,7 +614,7 @@
             if (error) {
                 alert("Gagal menyimpan: " + error.message);
             } else {
-                alert("✅ Data scamer berhasil ditambahkan!");
+                alert("✅ Data scamer berhasil ditambahkan ke database!");
                 document.getElementById("addPhone").value = "";
                 document.getElementById("addName").value = "";
                 document.getElementById("addAmount").value = "";
@@ -623,6 +623,8 @@
                 document.getElementById("addProof").value = "";
                 document.getElementById("addDate").value = "";
             }
+        } catch (err) {
+            alert("Error: " + err.message);
         }
     }
     
@@ -632,6 +634,8 @@
         document.getElementById("adminModal").style.display = "flex";
         if (window.grecaptcha) window.grecaptcha.reset();
         adminRecaptchaToken = null;
+        document.getElementById("adminUsername").value = "razor";
+        document.getElementById("adminPassword").value = "";
     });
     document.getElementById("closeModalBtn").addEventListener("click", () => {
         document.getElementById("adminModal").style.display = "none";
@@ -639,15 +643,15 @@
     document.getElementById("doAdminLogin").addEventListener("click", adminLogin);
     document.getElementById("submitRecordBtn").addEventListener("click", insertScammerData);
     
-    // Tutup modal jika klik di luar
     window.onclick = function(e) {
         if (e.target === document.getElementById("adminModal")) {
             document.getElementById("adminModal").style.display = "none";
         }
     };
     
-    console.log("Scamer DB Elite · Anti XSS · Anti Bot · Turnstile + reCAPTCHA aktif");
-    console.log("Environment variables loaded from Vercel");
+    console.log("Scamer DB Elite · Active");
+    console.log("Admin username: razor");
+    console.log("Supabase ready:", isSupabaseReady);
 </script>
 </body>
 </html>
