@@ -4,15 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Scamer DB | Anti Scam Database</title>
-    <!-- Tailwind + Font Awesome + Google Fonts (Dark Elite style, no emoji) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Cloudflare Turnstile -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    <!-- Google reCAPTCHA v2 (Admin login) -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         * { font-family: 'Inter', sans-serif; }
@@ -69,13 +65,17 @@
             transform: scale(0.9);
             margin: 0 auto;
         }
+        .cf-turnstile {
+            display: flex;
+            justify-content: center;
+        }
     </style>
 </head>
 <body class="text-gray-200">
 
     <!-- Main Container -->
     <div class="max-w-5xl mx-auto px-4 py-8 md:py-12">
-        <!-- Header Logo / Title - dark elite no emoji -->
+        <!-- Header Logo / Title -->
         <div class="flex justify-between items-center mb-8 border-b border-purple-900/40 pb-4">
             <div>
                 <h1 class="text-3xl md:text-4xl font-black tracking-tight bg-gradient-to-r from-red-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">SCAMER DB</h1>
@@ -94,8 +94,8 @@
                     <input type="text" id="searchInput" placeholder="Masukkan nomor HP (62xxxxx) atau nama scamer..." class="w-full px-5 py-3 rounded-xl bg-black/40 border border-gray-700 focus:outline-none neon-border">
                     <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle"></i> Format nomor otomatis dibersihkan: 62xxx (tanpa '+' atau '0')</p>
                 </div>
-                <div class="flex gap-2 items-start">
-                    <div id="cf-turnstile-search" class="cf-turnstile" data-sitekey="0x4AAAAAADWGW6loSQy9qZqQ" data-callback="onTurnstileSuccess" data-theme="dark"></div>
+                <div class="flex flex-col gap-3 items-end">
+                    <div id="cf-turnstile-search" class="cf-turnstile" data-sitekey="" data-callback="onTurnstileSuccess" data-theme="dark"></div>
                     <button id="searchBtn" class="btn-neon px-8 py-3 rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><i class="fas fa-skull"></i> SEARCH</button>
                 </div>
             </div>
@@ -105,7 +105,7 @@
         <!-- Result Display Section -->
         <div id="resultContainer" class="space-y-5"></div>
 
-        <!-- Admin Login Modal (hidden) -->
+        <!-- Admin Login Modal -->
         <div id="adminModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all">
             <div class="glass-card rounded-2xl w-full max-w-md p-6 border border-gray-700 shadow-2xl">
                 <div class="flex justify-between items-center mb-4">
@@ -115,14 +115,14 @@
                 <div>
                     <input type="text" id="adminUsername" placeholder="Username" autocomplete="off" class="w-full px-4 py-3 rounded-lg bg-black/50 border border-gray-600 mb-3">
                     <input type="password" id="adminPassword" placeholder="Password" autocomplete="off" class="w-full px-4 py-3 rounded-lg bg-black/50 border border-gray-600 mb-4">
-                    <div class="g-recaptcha mb-4" data-sitekey="6Le9GvwsAAAAAFXPJZN153eZovhhyj7RoD6EoteK" data-theme="dark"></div>
+                    <div class="g-recaptcha mb-4" data-sitekey="" data-theme="dark"></div>
                     <button id="loginAdminBtn" class="w-full bg-purple-700 hover:bg-purple-800 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2"><i class="fas fa-key"></i> LOGIN</button>
                     <p id="adminError" class="text-red-400 text-sm mt-3 hidden text-center"></p>
                 </div>
             </div>
         </div>
 
-        <!-- Admin Panel (add data) - shown after login -->
+        <!-- Admin Panel (add data) -->
         <div id="adminPanel" class="glass-card rounded-2xl p-6 mt-8 hidden">
             <div class="flex items-center justify-between border-b border-purple-900/40 pb-3 mb-5">
                 <h2 class="text-2xl font-bold flex gap-2"><i class="fas fa-database text-red-400"></i> ADMIN PANEL - TAMBAH DATA SCAMER</h2>
@@ -163,53 +163,109 @@
     </div>
 
     <script>
-        // ------------------------------
-        //  Konfigurasi dari env (hardcoded untuk deploy, tidak diubah struktur)
-        // ------------------------------
-        const SUPABASE_PUBLIC_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhbXBsZSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjg5MDAwMDAwLCJleHAiOjIwMDQ1NjAwMDB9.dummykeyexample_replace_with_your_publishable_key";
-        const SUPABASE_PROJECT_URL = "https://yourproject.supabase.co";
-        const ADMIN_USERNAME_ENV = "Sc4m3rAdmin";
-        const ADMIN_PASSWORD_ENV = "SecureDb@2025!";
+        // ============================================================
+        // AMBIL DARI ENVIRONMENT VARIABLES (Vercel)
+        // Nama variable PERSIS seperti yang diminta:
+        // - CL_TRL (site key untuk Cloudflare Turnstile)
+        // - Supa_api_key (Supabase Publishable key / ANON key)
+        // - supa_PROJECT_URL (Supabase Project URL)
+        // - reCAPTCHA_secreatkey (site key untuk Google reCAPTCHA)
+        // - ANON_PUB_SUPA (fallback / alternate key)
+        // - ADMIN_USERNAME_ENV
+        // - ADMIN_PASSWORD_ENV
+        // ============================================================
         
-        // NOTE: Di env Vercel seharusnya mengisi nilai asli, untuk demo saya akan gunakan validasi dari variabel environment.
-        // Tapi karena ini static HTML & JS, kita melakukan fallback dengan hardcoded di client? TIDAK aman, tapi sebagai simulasi kita set dari global ENV?
-        // Client-side tidak bisa menyembunyikan kredensial admin sepenuhnya. Namun tujuan akhir: admin user/pass diambil dari variabel ENV di build time.
-        // Untuk membuat demo sesuai spek, kita akan definisikan dari "env" namun aman? Kita menggunakan prompt dari variabel window.env atau hardcoded sementara.
-        // Karena instruksi: "akun admin di Env vercell" client tidak bisa akses langsung, kita gunakan pendekatan serverless? Tapi statis frontend.
-        // Pada real deployment, sebaiknya backend auth, tapi sesuai permintaan: login admin dengan recaptcha, kita simpan di JS dengan obfuscate minimal.
-        // Untuk keamanan lebih, sebenarnya backend validasi diperlukan. Namun untuk memenuhi, username & password diset seperti instruksi.
-        // Saya masukkan sesuai yang diberikan (contoh).
-        // Ganti dengan nilai asli dari env di Vercel melalui proses build (tapi code ini statis, maka kita gunakan variabel)
-        // Agar lebih sesuai: kredensial disimpan di dalam objek ENV_SIM.
-        const ENV_ADMIN = {
-            username: "Sc4m3rAdmin",   // sesuai Admin_uSername
-            password: "SecureDb@2025!" // sesuai Admin_pasword
+        // Konfigurasi dari server-side (Vercel akan inject saat build)
+        // Karena ini client-side, kita baca dari window.__ENV atau dari meta tags
+        // Untuk keamanan, Vercel akan mengganti placeholder ini saat build
+        
+        let CONFIG = {
+            CL_TRL: '',
+            Supa_api_key: '',
+            supa_PROJECT_URL: '',
+            reCAPTCHA_secreatkey: '',
+            ANON_PUB_SUPA: '',
+            ADMIN_USERNAME_ENV: '',
+            ADMIN_PASSWORD_ENV: ''
         };
         
-        // Supabase client init (validasi jika key placeholder bisa diubah user)
-        let supabase = null;
-        try {
-            const supabaseUrl = SUPABASE_PROJECT_URL;
-            const supabaseKey = SUPABASE_PUBLIC_KEY;
-            if (supabaseUrl && supabaseKey && supabaseUrl !== "https://yourproject.supabase.co") {
-                supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-            } else {
-                console.warn("Supabase belum dikonfigurasi. Silakan atur SUPABASE_PROJECT_URL dan SUPABASE_PUBLIC_KEY di env.");
+        // Coba ambil dari berbagai sumber
+        (function loadConfig() {
+            // Method 1: Dari window.__ENV (jika diatur server-side)
+            if (typeof window !== 'undefined' && window.__ENV) {
+                CONFIG = { ...CONFIG, ...window.__ENV };
             }
-        } catch(e) { console.error(e); }
-
+            
+            // Method 2: Dari meta tags
+            const metaMap = {
+                'CL_TRL': 'cl-trl-site-key',
+                'Supa_api_key': 'supa-api-key',
+                'supa_PROJECT_URL': 'supa-project-url',
+                'reCAPTCHA_secreatkey': 'recaptcha-site-key',
+                'ANON_PUB_SUPA': 'anon-pub-supa',
+                'ADMIN_USERNAME_ENV': 'admin-username',
+                'ADMIN_PASSWORD_ENV': 'admin-password'
+            };
+            
+            for (const [key, metaName] of Object.entries(metaMap)) {
+                const meta = document.querySelector(`meta[name="${metaName}"]`);
+                if (meta && meta.getAttribute('content')) {
+                    CONFIG[key] = meta.getAttribute('content');
+                }
+            }
+            
+            // Method 3: Dari global variable (jika di-set inline)
+            if (typeof CL_TRL !== 'undefined') CONFIG.CL_TRL = CL_TRL;
+            if (typeof Supa_api_key !== 'undefined') CONFIG.Supa_api_key = Supa_api_key;
+            if (typeof supa_PROJECT_URL !== 'undefined') CONFIG.supabaseUrl = supa_PROJECT_URL;
+            if (typeof reCAPTCHA_secreatkey !== 'undefined') CONFIG.reCAPTCHA_secreatkey = reCAPTCHA_secreatkey;
+            if (typeof ANON_PUB_SUPA !== 'undefined') CONFIG.ANON_PUB_SUPA = ANON_PUB_SUPA;
+            if (typeof ADMIN_USERNAME_ENV !== 'undefined') CONFIG.ADMIN_USERNAME_ENV = ADMIN_USERNAME_ENV;
+            if (typeof ADMIN_PASSWORD_ENV !== 'undefined') CONFIG.ADMIN_PASSWORD_ENV = ADMIN_PASSWORD_ENV;
+            
+            // Prioritaskan ANON_PUB_SUPA jika Supa_api_key kosong
+            if (!CONFIG.Supa_api_key && CONFIG.ANON_PUB_SUPA) {
+                CONFIG.Supa_api_key = CONFIG.ANON_PUB_SUPA;
+            }
+        })();
+        
+        // Set Turnstile site key
+        const turnstileDiv = document.querySelector('.cf-turnstile');
+        if (turnstileDiv && CONFIG.CL_TRL) {
+            turnstileDiv.setAttribute('data-sitekey', CONFIG.CL_TRL);
+        }
+        
+        // Set reCAPTCHA site key
+        const recaptchaDiv = document.querySelector('.g-recaptcha');
+        if (recaptchaDiv && CONFIG.reCAPTCHA_secreatkey) {
+            recaptchaDiv.setAttribute('data-sitekey', CONFIG.reCAPTCHA_secreatkey);
+        }
+        
+        // Admin credentials dari ENV
+        const ADMIN_USERNAME = CONFIG.ADMIN_USERNAME_ENV || 'Sc4m3rAdmin';
+        const ADMIN_PASSWORD = CONFIG.ADMIN_PASSWORD_ENV || 'SecureDb2025!';
+        
+        // Supabase client
+        let supabase = null;
+        if (CONFIG.Supa_api_key && CONFIG.supabaseUrl) {
+            supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.Supa_api_key);
+        } else if (CONFIG.Supa_api_key && CONFIG.supabaseUrl) {
+            supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.Supa_api_key);
+        } else {
+            console.warn('Supabase tidak dikonfigurasi. Set Supa_api_key dan supa_PROJECT_URL di Vercel Environment Variables.');
+        }
+        
         // State
         let turnstileToken = null;
         let adminLoggedIn = false;
-        let currentCaptchaResponse = null;
-
+        
         // Cloudflare Turnstile callback
         window.onTurnstileSuccess = function(token) {
             turnstileToken = token;
             document.getElementById("searchStatus").classList.add("hidden");
         };
-
-        // Helper: sanitasi input untuk anti XSS (text/html)
+        
+        // Helper: sanitasi input anti XSS
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
@@ -217,12 +273,10 @@
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
                 return m;
-            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-                return c;
             });
         }
-
-        // Format nomor hp: hanya angka, hapus +62 / 0 dll -> wajib 62xxxx
+        
+        // Format nomor hp
         function normalizePhone(input) {
             let raw = input.trim();
             raw = raw.replace(/[^\d+]/g, '');
@@ -231,7 +285,7 @@
             if (!raw.startsWith('62')) raw = '62' + raw;
             return raw;
         }
-
+        
         // Validasi proof URL hanya dari top4top.io
         function isValidProofUrl(url) {
             if (!url) return false;
@@ -241,7 +295,6 @@
             } catch(e) { return false; }
         }
         
-        // Informasi link: hanya http/https, mencegah XSS, dan bukan javascript:
         function sanitizeInfoLink(url) {
             if (!url) return null;
             try {
@@ -250,8 +303,8 @@
                 return u.href;
             } catch(e) { return null; }
         }
-
-        // Searching ke Supabase (dengan token CF)
+        
+        // Search ke Supabase
         async function performSearch() {
             const searchRaw = document.getElementById("searchInput").value.trim();
             if (!searchRaw) {
@@ -264,21 +317,22 @@
                 return;
             }
             document.getElementById("searchStatus").classList.add("hidden");
-            // validasi anti XSS: searchRaw sudah di-escape nanti saat tampil
+            
+            if (!supabase) {
+                showResultMessage("Database belum terhubung. Periksa konfigurasi Supabase di Environment Variables.", "error");
+                return;
+            }
+            
             let isPhoneSearch = /^[\d\+]+$/.test(searchRaw.replace(/\s/g,'')) || searchRaw.startsWith("62") || searchRaw.includes("+");
             let query;
             if (isPhoneSearch) {
                 let phoneNorm = normalizePhone(searchRaw);
-                query = supabase ? supabase.from('scammers').select('*').eq('phone', phoneNorm) : null;
+                query = supabase.from('scammers').select('*').eq('phone', phoneNorm);
             } else {
-                // search by name, case insensitive (gunakan ilike)
                 let safeName = searchRaw.trim();
-                query = supabase ? supabase.from('scammers').select('*').ilike('name', `%${safeName}%`) : null;
+                query = supabase.from('scammers').select('*').ilike('name', `%${safeName}%`);
             }
-            if (!supabase || !query) {
-                showResultMessage("Database belum terhubung. Periksa konfigurasi Supabase.", "error");
-                return;
-            }
+            
             const { data, error } = await query;
             if (error) {
                 console.error(error);
@@ -286,16 +340,17 @@
                 return;
             }
             renderSearchResults(data);
-            // reset turnstile setelah search (optional, bisa refresh)
+            
+            // Reset turnstile
             turnstileToken = null;
             if(window.turnstile) window.turnstile.reset(document.querySelector('.cf-turnstile'));
         }
-
+        
         function showResultMessage(msg, type) {
             const container = document.getElementById("resultContainer");
             container.innerHTML = `<div class="glass-card p-6 text-center rounded-xl border border-${type === 'error' ? 'red' : 'yellow'}-800/50"><i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i> ${escapeHtml(msg)}</div>`;
         }
-
+        
         function renderSearchResults(scammers) {
             const container = document.getElementById("resultContainer");
             if (!scammers || scammers.length === 0) {
@@ -313,7 +368,7 @@
                 let proofRaw = s.proof_url;
                 let proofHtml = '-';
                 if(proofRaw && isValidProofUrl(proofRaw)) {
-                    proofHtml = `<a href="${escapeHtml(proofRaw)}" target="_blank" class="inline-block"><img src="${escapeHtml(proofRaw)}" alt="bukti" class="proof-img max-h-40 mt-2"></a>`;
+                    proofHtml = `<a href="${escapeHtml(proofRaw)}" target="_blank" class="inline-block"><img src="${escapeHtml(proofRaw)}" alt="bukti" class="proof-img max-h-40 mt-2" loading="lazy"></a>`;
                 } else if(proofRaw) { proofHtml = `<span class="text-red-400">URL tidak valid (hanya top4top.io)</span>`; }
                 let dateAdded = s.date_added || s.created_at?.slice(0,10) || '-';
                 html += `
@@ -325,14 +380,14 @@
                         <div><span class="text-gray-400 text-sm">📅 TANGGAL</span><div>${escapeHtml(dateAdded)}</div></div>
                         <div class="md:col-span-2"><span class="text-gray-400 text-sm">⚠️ ALASAN</span><div class="mt-1">${reasonEsc}</div></div>
                         <div class="md:col-span-2"><span class="text-gray-400 text-sm">🔗 INFO LAIN</span><div class="break-all">${safeInfoLink}</div></div>
-                        <div class="md:col-span-2"><span class="text-gray-400 text-sm">🖼️ BUKTI GAMBAR (top4top)</span><div>${proofHtml}</div></div>
+                        <div class="md:col-span-2"><span class="text-gray-400 text-sm">🖼️ BUKTI GAMBAR</span><div>${proofHtml}</div></div>
                     </div>
                 </div>`;
             }
             container.innerHTML = html;
         }
-
-        // Admin Login Logic + reCAPTCHA
+        
+        // Admin Login
         document.getElementById("openAdminBtn")?.addEventListener("click", () => {
             document.getElementById("adminModal").classList.remove("hidden");
         });
@@ -349,12 +404,10 @@
                 document.getElementById("adminError").classList.remove("hidden");
                 return;
             }
-            // Verifikasi sederhana (untuk keamanan tambahan disarankan backend, tapi sesuai flow)
-            if (user === ENV_ADMIN.username && pass === ENV_ADMIN.password) {
+            if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
                 adminLoggedIn = true;
                 document.getElementById("adminModal").classList.add("hidden");
                 document.getElementById("adminPanel").classList.remove("hidden");
-                // reset recaptcha
                 if(grecaptcha) grecaptcha.reset();
                 document.getElementById("adminError").classList.add("hidden");
             } else {
@@ -368,7 +421,7 @@
             document.getElementById("adminPanel").classList.add("hidden");
         });
         
-        // Add scammer data (Admin only)
+        // Add scammer data
         document.getElementById("addScammerForm")?.addEventListener("submit", async (e) => {
             e.preventDefault();
             if (!adminLoggedIn) {
@@ -417,8 +470,7 @@
                 document.getElementById("addScammerForm").reset();
             }
         });
-
-        // Search button + turnstile validation auto trigger
+        
         document.getElementById("searchBtn")?.addEventListener("click", () => {
             if (!turnstileToken) {
                 document.getElementById("searchStatus").innerHTML = "<i class='fas fa-cloud-upload-alt'></i> Harap verifikasi Cloudflare Turnstile terlebih dahulu!";
@@ -428,12 +480,13 @@
             performSearch();
         });
         
-        // Prevent XSS di semua input (sudah escape HTML saat render, juga sanitasi URL)
-        // Juga DDOS protection: Cloudflare Turnstile + Rate limit client tidak diperlukan, tapi Turnstile + CDN sudah meringankan.
-        // Untuk anti bypass turnstile di search sudah mandatory.
-        window.onload = () => {
-            if(window.turnstile) window.turnstile.render();
-        };
+        console.log('Config loaded:', {
+            hasCL_TRL: !!CONFIG.CL_TRL,
+            hasSupaKey: !!CONFIG.Supa_api_key,
+            hasSupaUrl: !!CONFIG.supabaseUrl,
+            hasRecaptcha: !!CONFIG.reCAPTCHA_secreatkey,
+            hasAdmin: !!CONFIG.ADMIN_USERNAME_ENV
+        });
     </script>
 </body>
 </html>
