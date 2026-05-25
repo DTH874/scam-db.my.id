@@ -1,0 +1,13 @@
+{
+    "functions": {
+        "api/login.js": {
+            "runtime": "nodejs18.x"
+        },
+        "api/add-scammer.js": {
+            "runtime": "nodejs18.x"
+        }
+    },
+    "rewrites": [
+        { "source": "/(.*)", "destination": "/index.html" }
+    ]
+}
