@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Scamer DB · Dark Elite Registry</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         * {
             margin: 0;
@@ -16,33 +15,65 @@
         }
 
         body {
-            background: #0a0c12;
-            background-image: radial-gradient(circle at 25% 40%, #0f121b 0%, #05070a 100%);
-            font-family: 'Inter', sans-serif;
+            background: #05070a;
+            font-family: 'Space Grotesk', sans-serif;
             color: #eef2f5;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 30%, #0a0f1a 0%, #020408 100%);
+            z-index: -2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(45deg, rgba(0,255,255,0.02) 0px, rgba(0,255,255,0.02) 2px, transparent 2px, transparent 8px);
+            z-index: -1;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
         }
 
         .container {
-            max-width: 1280px;
+            max-width: 1300px;
             margin: 0 auto;
             padding: 2rem 1.5rem;
+            position: relative;
+            z-index: 2;
         }
 
+        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+            padding: 1rem 0 1.5rem;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
             margin-bottom: 2.5rem;
+            backdrop-filter: blur(4px);
         }
 
         .logo h1 {
-            font-size: 2.2rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #ffffff 0%, #00d4ff 50%, #7c3aed 100%);
+            font-size: 2.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #00e0ff 40%, #7c3aed 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -53,77 +84,93 @@
             font-size: 0.7rem;
             color: #5f7f9e;
             letter-spacing: 2px;
-            margin-top: 4px;
+            margin-top: 5px;
         }
 
         .admin-btn {
-            background: rgba(20, 28, 38, 0.9);
-            backdrop-filter: blur(8px);
-            border: 1px solid #2c4c6c;
+            background: rgba(10, 20, 30, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid #00ccff;
             padding: 10px 28px;
-            border-radius: 60px;
+            border-radius: 40px;
             font-weight: 600;
             font-size: 0.85rem;
-            color: #b8e1fc;
+            color: #00e0ff;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 5px rgba(0, 204, 255, 0.3);
         }
 
         .admin-btn:hover {
-            background: #1a3a4e;
-            border-color: #00ccff;
+            background: #00ccff20;
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 204, 255, 0.6);
             color: white;
         }
 
+        /* Search Card */
         .search-card {
-            background: rgba(8, 12, 20, 0.75);
-            backdrop-filter: blur(16px);
-            border-radius: 32px;
+            background: rgba(8, 12, 24, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 40px;
             padding: 2rem;
-            border: 1px solid rgba(0, 200, 255, 0.2);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 255, 255, 0.25);
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(0, 255, 255, 0.1);
             margin-bottom: 2rem;
+            transition: all 0.3s;
+        }
+
+        .search-card:hover {
+            border-color: rgba(0, 255, 255, 0.5);
+            box-shadow: 0 30px 50px -15px rgba(0,0,0,0.7);
         }
 
         .search-card h2 {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff, #00ccff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         .search-card .sub {
-            color: #7e9eb5;
+            color: #8aadcc;
             font-size: 0.85rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.8rem;
+            border-left: 3px solid #00ccff;
+            padding-left: 12px;
         }
 
         .search-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 1.2rem;
             align-items: flex-start;
         }
 
         .search-input {
             flex: 3;
-            min-width: 240px;
+            min-width: 250px;
         }
 
         .search-input input {
             width: 100%;
-            background: #0c111a;
-            border: 1px solid #2a3e50;
-            padding: 14px 20px;
-            border-radius: 60px;
+            background: #0a101c;
+            border: 1px solid #2a4a60;
+            padding: 15px 22px;
+            border-radius: 50px;
             font-size: 1rem;
             color: white;
-            font-family: 'Inter', monospace;
+            font-family: 'Space Grotesk', monospace;
             outline: none;
+            transition: all 0.2s;
         }
 
         .search-input input:focus {
-            border-color: #00ccff;
-            box-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
+            border-color: #00ffff;
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
         }
 
         .turnstile-box {
@@ -132,71 +179,94 @@
         }
 
         .search-btn {
-            background: linear-gradient(95deg, #0f212e, #061218);
-            border: 1px solid #2c6e8a;
-            padding: 14px 32px;
-            border-radius: 60px;
+            background: linear-gradient(95deg, #0a1a2a, #021018);
+            border: 1px solid #00ccff;
+            padding: 15px 36px;
+            border-radius: 50px;
             font-weight: 700;
             font-size: 1rem;
-            color: white;
+            color: #00e0ff;
             cursor: pointer;
-            transition: 0.2s;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .search-btn:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
+            border-color: #2c5a70;
         }
 
+        .search-btn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        /* Result Panel */
         .result-panel {
-            background: #080c14;
-            border-radius: 24px;
-            border: 1px solid #1e3342;
-            padding: 1.5rem;
-            min-height: 280px;
+            background: rgba(6, 10, 18, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            padding: 1.8rem;
+            min-height: 300px;
         }
 
         .record-card {
-            background: #0f1622;
-            border-left: 5px solid #e63946;
-            border-radius: 20px;
-            padding: 1.4rem;
+            background: linear-gradient(135deg, #0f1828, #0a101c);
+            border-left: 5px solid #ff3366;
+            border-radius: 24px;
+            padding: 1.5rem;
             margin-bottom: 1.2rem;
+            transition: all 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .record-card:hover {
+            transform: translateX(5px);
+            border-left-color: #ff6699;
         }
 
         .record-field {
             display: grid;
-            grid-template-columns: 130px 1fr;
+            grid-template-columns: 140px 1fr;
             gap: 12px;
             margin: 12px 0;
         }
 
         .field-label {
             font-weight: 700;
-            color: #7ab8d4;
+            color: #5bc0ff;
             font-size: 0.8rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
 
         .field-value {
             word-break: break-word;
-            color: #e2e8f0;
+            color: #eef2ff;
         }
 
         .proof-img {
             max-width: 100%;
-            max-height: 220px;
-            border-radius: 12px;
-            border: 1px solid #2c6e8a;
+            max-height: 240px;
+            border-radius: 16px;
+            border: 1px solid #3a6e8a;
+            transition: 0.2s;
+        }
+
+        .proof-img:hover {
+            transform: scale(1.02);
         }
 
         .not-found {
             text-align: center;
             padding: 3rem;
             color: #6f9abb;
+            font-style: italic;
         }
 
+        /* Modal Premium */
         .modal {
             display: none;
             position: fixed;
@@ -204,38 +274,41 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(14px);
+            background: rgba(0, 0, 0, 0.96);
+            backdrop-filter: blur(20px);
             z-index: 1000;
             justify-content: center;
             align-items: center;
         }
 
         .modal-content {
-            background: #0c1320;
+            background: linear-gradient(145deg, #0c1424, #060a12);
             max-width: 550px;
             width: 90%;
-            border-radius: 32px;
+            border-radius: 40px;
             padding: 2rem;
-            border: 1px solid #2c5a70;
-            max-height: 90vh;
+            border: 1px solid #00ccff;
+            box-shadow: 0 0 40px rgba(0, 204, 255, 0.2);
+            max-height: 85vh;
             overflow-y: auto;
         }
 
         .modal-content input, .modal-content textarea {
             width: 100%;
-            background: #07101c;
-            border: 1px solid #2a5068;
-            padding: 12px 18px;
+            background: #071020;
+            border: 1px solid #2a6078;
+            padding: 12px 20px;
             border-radius: 40px;
             color: white;
             margin-bottom: 1rem;
             font-size: 0.9rem;
+            transition: 0.2s;
         }
 
-        .modal-content textarea {
-            border-radius: 20px;
-            resize: vertical;
+        .modal-content input:focus, .modal-content textarea:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
         }
 
         .g-recaptcha {
@@ -244,16 +317,27 @@
             justify-content: center;
         }
 
-        .btn-submit {
-            background: #c2412c;
+        .btn-submit, .login-btn {
+            background: linear-gradient(95deg, #c2412c, #8a2010);
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 40px;
+            border-radius: 50px;
             font-weight: bold;
             color: white;
             cursor: pointer;
             margin-top: 0.5rem;
+            font-size: 1rem;
+            transition: 0.2s;
+        }
+
+        .login-btn {
+            background: linear-gradient(95deg, #1e6a88, #0e3a50);
+        }
+
+        .btn-submit:hover, .login-btn:hover {
+            filter: brightness(1.1);
+            transform: scale(0.98);
         }
 
         .close-modal {
@@ -261,34 +345,41 @@
             font-size: 28px;
             cursor: pointer;
             color: #8aaec0;
+            transition: 0.2s;
+        }
+
+        .close-modal:hover {
+            color: #ff5566;
         }
 
         hr {
-            border-color: #1e4055;
+            border-color: #2a6078;
             margin: 1rem 0;
         }
 
-        .login-btn {
-            background: #1e5a77;
-            width: 100%;
-            padding: 12px;
-            border: none;
+        .toast {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: #0a1a2a;
+            border-left: 4px solid #00ccff;
+            padding: 12px 24px;
             border-radius: 40px;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
+            z-index: 1100;
+            backdrop-filter: blur(8px);
+            font-size: 0.85rem;
+            animation: fadeInUp 0.3s ease;
         }
 
-        .toast-message {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #1a2a3a;
-            padding: 12px 20px;
-            border-radius: 40px;
-            border-left: 4px solid #00ccff;
-            z-index: 1100;
-            font-size: 0.85rem;
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 700px) {
@@ -307,134 +398,142 @@
     <div class="header">
         <div class="logo">
             <h1>⟡ SCAMER DB ⟡</h1>
-            <p>ELITE FRAUD BLACKLIST · ZERO TRUST NETWORK</p>
+            <p>ELITE FRAUD BLACKLIST · ZERO TRUST</p>
         </div>
-        <button class="admin-btn" id="openAdminModalBtn">⛧ ADMIN ACCESS ⛧</button>
+        <button class="admin-btn" id="openAdminBtn">🔐 ADMIN VAULT</button>
     </div>
 
     <div class="search-card">
-        <h2>🔍 IDENTIFY FRAUDSTER</h2>
-        <div class="sub">Masukkan nomor HP (format 62xxxx) atau nama pelaku</div>
+        <h2>⛧ TRACE FRAGMENT ⛧</h2>
+        <div class="sub">Masukkan nomor HP (62xxxx) atau nama pelaku ke dalam sistem</div>
         <div class="search-row">
             <div class="search-input">
-                <input type="text" id="searchInput" placeholder="Contoh: 6281234567890 atau nama scamer" autocomplete="off">
+                <input type="text" id="searchQuery" placeholder="contoh: 6281234567890 atau nama scamer" autocomplete="off">
             </div>
             <div class="turnstile-box">
-                <div id="cfTurnstileContainer" class="cf-turnstile" data-sitekey="0x4AAAAAADWGW6loSQy9qZqQ" data-callback="onTurnstileSuccess"></div>
+                <div id="cfTurnstile" class="cf-turnstile" data-sitekey="0x4AAAAAADWGW6loSQy9qZqQ" data-callback="onTurnstileCallback"></div>
             </div>
-            <button id="searchBtn" class="search-btn" disabled>⚡ VALIDATE & SEARCH</button>
+            <button id="searchButton" class="search-btn" disabled>⌕ VALIDATE & SEARCH</button>
         </div>
     </div>
 
-    <div id="resultContainer" class="result-panel">
-        <div class="not-found">⟡ Selesaikan verifikasi anti-bot untuk memulai pencarian ⟡</div>
+    <div id="resultArea" class="result-panel">
+        <div class="not-found">⚡ Selesaikan verifikasi anti-bot untuk memulai pencarian</div>
     </div>
 </div>
 
 <div id="adminModal" class="modal">
     <div class="modal-content">
-        <span class="close-modal" id="closeModalBtn">&times;</span>
-        <h2 style="margin-bottom: 0.5rem;">⛧ ADMIN ELITE PANEL ⛧</h2>
-        <p style="font-size: 0.75rem; margin-bottom: 1.5rem; color:#7e9eb5;">Tambah data scamer ke registry</p>
+        <span class="close-modal" id="closeModal">✕</span>
+        <h2 style="margin-bottom: 0.5rem;">⛧ ADMIN ELITE ⛧</h2>
+        <p style="font-size: 0.75rem; margin-bottom: 1.5rem; color:#7e9eb5;">Tambahkan entri scamer ke database pusat</p>
         
-        <div id="adminLoginSection">
-            <input type="text" id="adminUsername" placeholder="Username" autocomplete="off" value="razor">
-            <input type="password" id="adminPassword" placeholder="Password" autocomplete="off">
-            <div class="g-recaptcha" data-sitekey="6Le9GvwsAAAAAFXPJZN153eZovhhyj7RoD6EoteK" data-callback="onAdminRecaptchaSuccess"></div>
-            <button id="doAdminLogin" class="login-btn">LOGIN AS ADMIN</button>
+        <div id="loginSection">
+            <input type="text" id="adminUser" placeholder="Username" autocomplete="off">
+            <input type="password" id="adminPass" placeholder="Password" autocomplete="off">
+            <div class="g-recaptcha" data-sitekey="6Le9GvwsAAAAAFXPJZN153eZovhhyj7RoD6EoteK" data-callback="onRecaptchaSuccess"></div>
+            <button id="loginBtn" class="login-btn">LOGIN SECURE</button>
         </div>
         
-        <div id="adminAddForm" style="display: none;">
+        <div id="addFormSection" style="display: none;">
             <hr>
-            <input type="text" id="addPhone" placeholder="NOMOR HP (wajib format 62xxxxx)">
-            <input type="text" id="addName" placeholder="Nama Scamer (opsional)">
-            <input type="text" id="addAmount" placeholder="Nominal kerugian (contoh: Rp 50.000.000)">
-            <textarea id="addReason" rows="2" placeholder="Alasan / modus penipuan"></textarea>
-            <input type="text" id="addInfo" placeholder="Info lain (URL pastebin / pastefy)">
-            <input type="text" id="addProof" placeholder="Bukti URL gambar (WAJIB https://top4top.io/...)">
-            <input type="date" id="addDate">
-            <button id="submitRecordBtn" class="btn-submit">⚠️ TAMBAH KE DATABASE ⚠️</button>
+            <input type="text" id="inputPhone" placeholder="NOMOR HP (62xxxxx) *wajib">
+            <input type="text" id="inputName" placeholder="Nama Scamer">
+            <input type="text" id="inputAmount" placeholder="Nominal kerugian (Rp)">
+            <textarea id="inputReason" rows="2" placeholder="Alasan / modus penipuan"></textarea>
+            <input type="text" id="inputInfo" placeholder="Info lain (URL pastebin/pastefy)">
+            <input type="text" id="inputProof" placeholder="Bukti URL gambar (WAJIB https://top4top.io/...)">
+            <input type="date" id="inputDate">
+            <button id="submitDataBtn" class="btn-submit">⚠️ ADD TO DATABASE ⚠️</button>
         </div>
     </div>
 </div>
 
 <script>
-    // ============================================================
-    // CREDENTIAL LANGSUNG DARI YANG ANDA BERIKAN
-    // ============================================================
-    const ADMIN_USERNAME = "razor";
-    const ADMIN_PASSWORD = "PolossXrazor24k93923334734907798677654547263487298573957343753860576";
-    
-    // ============================================================
-    // AMBIL ENVIRONMENT VARIABLES (VERCEL) - NAMA PERSIS SEPERTI YANG ANDA TULIS
-    // ============================================================
-    const SUPABASE_URL = "{{supa_PROJECT_URL}}";
-    const SUPABASE_ANON_KEY = "{{Supa_api_key}}";
-    
-    // Fallback untuk local dev / jika env belum terisi
-    let finalSupabaseUrl = SUPABASE_URL;
-    let finalSupabaseKey = SUPABASE_ANON_KEY;
-    
-    // Jika masih ada {{...}} berarti belum di-replace oleh Vercel
-    if (finalSupabaseUrl.includes("{{")) {
-        console.warn("⚠️ Environment variable supa_PROJECT_URL belum terisi di Vercel!");
-        finalSupabaseUrl = null;
-    }
-    if (finalSupabaseKey.includes("{{")) {
-        console.warn("⚠️ Environment variable Supa_api_key belum terisi di Vercel!");
-        finalSupabaseKey = null;
-    }
-    
-    // Inisialisasi Supabase
-    let supabaseClient = null;
-    let isSupabaseReady = false;
-    
-    if (finalSupabaseUrl && finalSupabaseKey && finalSupabaseUrl !== "https://your-project.supabase.co") {
-        try {
-            supabaseClient = window.supabase.createClient(finalSupabaseUrl, finalSupabaseKey);
-            isSupabaseReady = true;
-            console.log("✅ Supabase connected!");
-        } catch(e) {
-            console.error("Supabase init error:", e);
-        }
-    } else {
-        console.warn("⚠️ Silakan set environment variables di Vercel: supa_PROJECT_URL dan Supa_api_key");
-        // Mock untuk testing (tapi data tidak akan tersimpan)
-        supabaseClient = {
-            from: () => ({ 
-                select: () => Promise.resolve({ data: [], error: null }),
-                insert: () => Promise.resolve({ error: null })
-            }),
-            rpc: () => Promise.resolve({ data: { success: true }, error: null })
-        };
-        isSupabaseReady = true;
-    }
-    
-    // State
+    // Konfigurasi (env akan dibaca melalui API, tidak hardcode)
     let turnstileToken = null;
-    let adminRecaptchaToken = null;
-    let isAdminLoggedIn = false;
+    let recaptchaToken = null;
+    let adminSession = false;
     
-    // Cloudflare Turnstile callback
-    window.onTurnstileSuccess = function(token) {
+    window.onTurnstileCallback = function(token) {
         turnstileToken = token;
-        document.getElementById("searchBtn").disabled = false;
+        document.getElementById("searchButton").disabled = false;
     };
     
-    // Admin reCAPTCHA callback
-    window.onAdminRecaptchaSuccess = function(token) {
-        adminRecaptchaToken = token;
+    window.onRecaptchaSuccess = function(token) {
+        recaptchaToken = token;
     };
     
-    // Helper sanitize nomor HP ke format 62xxxx
-    function sanitizePhoneNumber(raw) {
-        let cleaned = raw.replace(/\D/g, '');
-        if (cleaned.startsWith('0')) cleaned = '62' + cleaned.substring(1);
-        if (!cleaned.startsWith('62')) cleaned = '62' + cleaned;
-        return cleaned;
+    function showToast(msg, isError = false) {
+        let toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.borderLeftColor = isError ? '#ff4466' : '#00ccff';
+        toast.innerText = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
     }
     
-    // Anti XSS escape
+    // Helper search
+    async function performSearch() {
+        if (!turnstileToken) {
+            showToast("Selesaikan Cloudflare Turnstile!", true);
+            return;
+        }
+        const query = document.getElementById("searchQuery").value.trim();
+        if (!query) {
+            showToast("Masukkan nomor atau nama", true);
+            return;
+        }
+        
+        // Panggil Supabase langsung (public read)
+        const SUPABASE_URL = "{{supa_PROJECT_URL}}";
+        const SUPABASE_ANON_KEY = "{{Supa_api_key}}";
+        if (!SUPABASE_URL.includes("{{") && !SUPABASE_ANON_KEY.includes("{{")) {
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            const isNumber = /^[\d\s\+]+$/.test(query) || query.startsWith('62') || query.startsWith('0');
+            let searchVal = query;
+            if (isNumber) {
+                let cleaned = query.replace(/\D/g, '');
+                if (cleaned.startsWith('0')) cleaned = '62' + cleaned.substring(1);
+                if (!cleaned.startsWith('62')) cleaned = '62' + cleaned;
+                searchVal = cleaned;
+            }
+            let dbQuery = supabase.from("scammers").select("*");
+            if (isNumber) dbQuery = dbQuery.eq("phone", searchVal);
+            else dbQuery = dbQuery.ilike("name", `%${searchVal}%`);
+            
+            const { data, error } = await dbQuery;
+            if (error) {
+                showToast("Error DB: " + error.message, true);
+                return;
+            }
+            if (!data || data.length === 0) {
+                document.getElementById("resultArea").innerHTML = '<div class="not-found">⛔ TIDAK DITEMUKAN dalam database Scamer DB ⛔</div>';
+            } else {
+                let html = `<h3 style="margin-bottom:1rem;">🔎 DITEMUKAN ${data.length} ENTRI</h3>`;
+                for (let rec of data) {
+                    html += `
+                    <div class="record-card">
+                        <div class="record-field"><div class="field-label">📞 NOMOR HP</div><div class="field-value">${escapeHtml(rec.phone)}</div></div>
+                        <div class="record-field"><div class="field-label">👤 NAMA</div><div class="field-value">${escapeHtml(rec.name || '—')}</div></div>
+                        <div class="record-field"><div class="field-label">💰 NOMINAL</div><div class="field-value">${escapeHtml(rec.amount || '—')}</div></div>
+                        <div class="record-field"><div class="field-label">⚠️ ALASAN</div><div class="field-value">${escapeHtml(rec.reason || '—')}</div></div>
+                        <div class="record-field"><div class="field-label">📎 INFO LAIN</div><div class="field-value">${rec.info_link ? `<a href="${escapeHtml(rec.info_link)}" target="_blank" style="color:#5bc0ff">${escapeHtml(rec.info_link)}</a>` : '—'}</div></div>
+                        <div class="record-field"><div class="field-label">🖼️ BUKTI</div><div class="field-value">${renderProof(rec.proof_url)}</div></div>
+                        <div class="record-field"><div class="field-label">📅 TANGGAL</div><div class="field-value">${escapeHtml(rec.date_added || '—')}</div></div>
+                    </div>`;
+                }
+                document.getElementById("resultArea").innerHTML = html;
+            }
+        } else {
+            document.getElementById("resultArea").innerHTML = '<div class="not-found">⚠️ Database tidak siap. Set environment variables di Vercel.</div>';
+        }
+        // reset turnstile
+        turnstileToken = null;
+        document.getElementById("searchButton").disabled = true;
+        if (window.turnstile) window.turnstile.reset();
+    }
+    
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, function(m) {
@@ -445,213 +544,102 @@
         });
     }
     
-    // Render proof URL (hanya top4top.io yang diizinkan)
     function renderProof(url) {
         if (!url) return '—';
         if (url.startsWith('https://top4top.io/')) {
             return `<img src="${escapeHtml(url)}" class="proof-img" onerror="this.style.display='none'" loading="lazy">`;
-        } else {
-            return `<span style="color:#ff8c66;">⛔ Domain tidak diwhitelist! Hanya top4top.io yang diperbolehkan.</span><br><span style="font-size:0.7rem;">${escapeHtml(url)}</span>`;
         }
+        return `<span style="color:#ff8c66;">⛔ Hanya top4top.io yang diizinkan</span><br><span style="font-size:0.7rem;">${escapeHtml(url)}</span>`;
     }
     
-    // ======================== FUNGSI SEARCH ========================
-    async function performSearch() {
-        if (!turnstileToken) {
-            alert("⚠️ Selesaikan verifikasi Cloudflare Turnstile terlebih dahulu!");
-            return;
-        }
-        
-        const rawQuery = document.getElementById("searchInput").value.trim();
-        if (rawQuery === "") {
-            document.getElementById("resultContainer").innerHTML = '<div class="not-found">Masukkan nomor HP atau nama scamer</div>';
-            return;
-        }
-        
-        const isNumber = /^[\d\s\+]+$/.test(rawQuery) || rawQuery.startsWith('62') || rawQuery.startsWith('0');
-        let searchValue = rawQuery;
-        
-        if (isNumber) {
-            searchValue = sanitizePhoneNumber(rawQuery);
-        }
-        
-        if (!isSupabaseReady || !supabaseClient) {
-            document.getElementById("resultContainer").innerHTML = '<div class="not-found">⚠️ Database tidak tersedia. Pastikan environment variables sudah diset di Vercel.</div>';
-            return;
-        }
-        
-        let query = supabaseClient.from("scammers").select("*");
-        if (isNumber) {
-            query = query.eq("phone", searchValue);
-        } else {
-            query = query.ilike("name", `%${searchValue}%`);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-            document.getElementById("resultContainer").innerHTML = `<div class="not-found">❌ Database error: ${escapeHtml(error.message)}</div>`;
-            return;
-        }
-        
-        if (!data || data.length === 0) {
-            document.getElementById("resultContainer").innerHTML = '<div class="not-found">⛔ TIDAK DITEMUKAN dalam database Scamer DB ⛔</div>';
-            turnstileToken = null;
-            document.getElementById("searchBtn").disabled = true;
-            if (window.turnstile) window.turnstile.reset();
-            return;
-        }
-        
-        let html = `<h3 style="margin-bottom:1rem;">🔎 Ditemukan ${data.length} entri scamer</h3>`;
-        for (const rec of data) {
-            html += `
-            <div class="record-card">
-                <div class="record-field">
-                    <div class="field-label">📞 NOMOR HP</div>
-                    <div class="field-value">${escapeHtml(rec.phone)}</div>
-                </div>
-                <div class="record-field">
-                    <div class="field-label">👤 NAMA</div>
-                    <div class="field-value">${escapeHtml(rec.name || '—')}</div>
-                </div>
-                <div class="record-field">
-                    <div class="field-label">💰 NOMINAL</div>
-                    <div class="field-value">${escapeHtml(rec.amount || '—')}</div>
-                </div>
-                <div class="record-field">
-                    <div class="field-label">⚠️ ALASAN</div>
-                    <div class="field-value">${escapeHtml(rec.reason || '—')}</div>
-                </div>
-                <div class="record-field">
-                    <div class="field-label">📎 INFO LAIN</div>
-                    <div class="field-value">${rec.info_link ? `<a href="${escapeHtml(rec.info_link)}" target="_blank" rel="noopener noreferrer" style="color:#5dade2">${escapeHtml(rec.info_link)}</a>` : '—'}</div>
-                </div>
-                <div class="record-field">
-                    <div class="field-label">🖼️ BUKTI</div>
-                    <div class="field-value">${renderProof(rec.proof_url)}</div>
-                </div>
-                <div class="record-field">
-                    <div class="field-label">📅 TANGGAL</div>
-                    <div class="field-value">${escapeHtml(rec.date_added || '—')}</div>
-                </div>
-            </div>
-            `;
-        }
-        document.getElementById("resultContainer").innerHTML = html;
-        
-        turnstileToken = null;
-        document.getElementById("searchBtn").disabled = true;
-        if (window.turnstile) window.turnstile.reset();
-    }
-    
-    // ======================== ADMIN LOGIN ========================
+    // Admin Login via API (secure)
     async function adminLogin() {
-        const username = document.getElementById("adminUsername").value;
-        const password = document.getElementById("adminPassword").value;
-        
-        if (!adminRecaptchaToken) {
-            alert("❌ Selesaikan reCAPTCHA terlebih dahulu!");
+        const username = document.getElementById("adminUser").value;
+        const password = document.getElementById("adminPass").value;
+        if (!recaptchaToken) {
+            showToast("Selesaikan reCAPTCHA!", true);
             return;
         }
-        
-        console.log("Login attempt - username:", username);
-        console.log("Expected username:", ADMIN_USERNAME);
-        
-        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-            isAdminLoggedIn = true;
-            document.getElementById("adminLoginSection").style.display = "none";
-            document.getElementById("adminAddForm").style.display = "block";
-            alert("✅ Login berhasil! Anda sekarang dapat menambahkan data scamer.");
-        } else {
-            alert("❌ Username atau password salah!\n\nUsername: " + ADMIN_USERNAME + "\nPassword: [tersembunyi]");
-            if (window.grecaptcha) window.grecaptcha.reset();
-            adminRecaptchaToken = null;
-        }
-    }
-    
-    // ======================== INSERT DATA ========================
-    async function insertScammerData() {
-        if (!isAdminLoggedIn) {
-            alert("Anda harus login sebagai admin terlebih dahulu!");
-            return;
-        }
-        
-        let phoneRaw = document.getElementById("addPhone").value.trim();
-        if (!phoneRaw) {
-            alert("Nomor HP wajib diisi!");
-            return;
-        }
-        
-        const phone = sanitizePhoneNumber(phoneRaw);
-        const name = document.getElementById("addName").value.trim() || null;
-        const amount = document.getElementById("addAmount").value.trim() || null;
-        const reason = document.getElementById("addReason").value.trim() || null;
-        let infoLink = document.getElementById("addInfo").value.trim() || null;
-        let proofUrl = document.getElementById("addProof").value.trim() || null;
-        const dateVal = document.getElementById("addDate").value || new Date().toISOString().slice(0,10);
-        
-        if (proofUrl && !proofUrl.startsWith("https://top4top.io/")) {
-            alert("❌ BUKTI URL hanya diperbolehkan dari domain https://top4top.io/ untuk keamanan!");
-            return;
-        }
-        
-        if (!supabaseClient || !isSupabaseReady) {
-            alert("❌ Koneksi database tidak tersedia. Pastikan environment variables sudah diset di Vercel.");
-            return;
-        }
-        
         try {
-            const { error } = await supabaseClient.from("scammers").insert([{
-                phone: phone,
-                name: name,
-                amount: amount,
-                reason: reason,
-                info_link: infoLink,
-                proof_url: proofUrl,
-                date_added: dateVal
-            }]);
-            
-            if (error) {
-                alert("Gagal menyimpan: " + error.message);
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, recaptchaToken })
+            });
+            const data = await res.json();
+            if (data.success) {
+                adminSession = true;
+                document.getElementById("loginSection").style.display = "none";
+                document.getElementById("addFormSection").style.display = "block";
+                showToast("Login berhasil! Anda dapat menambah data.");
             } else {
-                alert("✅ Data scamer berhasil ditambahkan ke database!");
-                document.getElementById("addPhone").value = "";
-                document.getElementById("addName").value = "";
-                document.getElementById("addAmount").value = "";
-                document.getElementById("addReason").value = "";
-                document.getElementById("addInfo").value = "";
-                document.getElementById("addProof").value = "";
-                document.getElementById("addDate").value = "";
+                showToast("Login gagal: " + (data.error || "kredensial salah"), true);
+                if (window.grecaptcha) window.grecaptcha.reset();
+                recaptchaToken = null;
             }
-        } catch (err) {
-            alert("Error: " + err.message);
+        } catch(e) {
+            showToast("Error koneksi ke server", true);
         }
     }
     
-    // ======================== EVENT LISTENERS ========================
-    document.getElementById("searchBtn").addEventListener("click", performSearch);
-    document.getElementById("openAdminModalBtn").addEventListener("click", () => {
+    // Insert data via API (secure)
+    async function insertScammer() {
+        if (!adminSession) {
+            showToast("Anda harus login terlebih dahulu!", true);
+            return;
+        }
+        let phone = document.getElementById("inputPhone").value.trim();
+        if (!phone) { showToast("Nomor HP wajib diisi", true); return; }
+        let cleaned = phone.replace(/\D/g, '');
+        if (cleaned.startsWith('0')) cleaned = '62' + cleaned.substring(1);
+        if (!cleaned.startsWith('62')) cleaned = '62' + cleaned;
+        const dataPayload = {
+            phone: cleaned,
+            name: document.getElementById("inputName").value.trim() || null,
+            amount: document.getElementById("inputAmount").value.trim() || null,
+            reason: document.getElementById("inputReason").value.trim() || null,
+            info_link: document.getElementById("inputInfo").value.trim() || null,
+            proof_url: document.getElementById("inputProof").value.trim() || null,
+            date_added: document.getElementById("inputDate").value || new Date().toISOString().slice(0,10)
+        };
+        if (dataPayload.proof_url && !dataPayload.proof_url.startsWith("https://top4top.io/")) {
+            showToast("Bukti URL harus dari top4top.io", true);
+            return;
+        }
+        try {
+            const res = await fetch('/api/add-scammer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataPayload)
+            });
+            const result = await res.json();
+            if (result.success) {
+                showToast("Data berhasil ditambahkan ke database!");
+                document.getElementById("inputPhone").value = "";
+                document.getElementById("inputName").value = "";
+                document.getElementById("inputAmount").value = "";
+                document.getElementById("inputReason").value = "";
+                document.getElementById("inputInfo").value = "";
+                document.getElementById("inputProof").value = "";
+                document.getElementById("inputDate").value = "";
+            } else {
+                showToast("Gagal: " + (result.error || "Unknown error"), true);
+            }
+        } catch(e) {
+            showToast("Error server", true);
+        }
+    }
+    
+    document.getElementById("searchButton").addEventListener("click", performSearch);
+    document.getElementById("openAdminBtn").onclick = () => {
         document.getElementById("adminModal").style.display = "flex";
         if (window.grecaptcha) window.grecaptcha.reset();
-        adminRecaptchaToken = null;
-        document.getElementById("adminUsername").value = "razor";
-        document.getElementById("adminPassword").value = "";
-    });
-    document.getElementById("closeModalBtn").addEventListener("click", () => {
-        document.getElementById("adminModal").style.display = "none";
-    });
-    document.getElementById("doAdminLogin").addEventListener("click", adminLogin);
-    document.getElementById("submitRecordBtn").addEventListener("click", insertScammerData);
-    
-    window.onclick = function(e) {
-        if (e.target === document.getElementById("adminModal")) {
-            document.getElementById("adminModal").style.display = "none";
-        }
+        recaptchaToken = null;
     };
-    
-    console.log("Scamer DB Elite · Active");
-    console.log("Admin username: razor");
-    console.log("Supabase ready:", isSupabaseReady);
+    document.getElementById("closeModal").onclick = () => document.getElementById("adminModal").style.display = "none";
+    document.getElementById("loginBtn").addEventListener("click", adminLogin);
+    document.getElementById("submitDataBtn").addEventListener("click", insertScammer);
+    window.onclick = (e) => { if(e.target === document.getElementById("adminModal")) document.getElementById("adminModal").style.display = "none"; };
 </script>
 </body>
 </html>
