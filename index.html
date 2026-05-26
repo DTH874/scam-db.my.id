@@ -1,19 +1,16 @@
-<!--
-# ============= BY POLOSS =============
-# index.html
-# Auto Ambil ENV Dari Vercel
--->
+<!-- BY POLOSS -->
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supabase Test</title>
+    <title>SUPABASE TEST</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+
         body{
             background:#0f172a;
             color:white;
@@ -21,7 +18,7 @@
             display:flex;
             justify-content:center;
             align-items:center;
-            height:100vh;
+            min-height:100vh;
         }
 
         .box{
@@ -54,7 +51,9 @@
             margin-top:15px;
             word-break:break-word;
         }
+
     </style>
+
 </head>
 <body>
 
@@ -62,44 +61,52 @@
 
     <h2>SUPABASE TEST</h2>
 
-    <input type="text" id="name" placeholder="Nama">
+    <input
+        type="text"
+        id="name"
+        placeholder="Nama"
+    >
 
-    <button onclick="addData()">ADD DATA</button>
+    <button onclick="addData()">
+        ADD DATA
+    </button>
 
     <div id="status"></div>
 
     <br>
+
     <small>BY POLOSS</small>
 
 </div>
 
-<script type="module">
+<script>
+
+let supabaseClient = null;
 
 /*
-# ============= IMPORT ENV VERCEL =============
-# HARUS NEXT.JS / VITE
+# ============= LOAD ENV DARI API VERCEL =============
 */
 
-const SUPABASE_URL = import.meta.env.VITE_NEXT_PUBLIC_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
+async function loadEnv(){
 
-const SUPABASE_KEY = import.meta.env.VITE_NEXT_PUBLIC_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const response = await fetch("/api/env_proses");
 
-/*
-# ============= INIT SUPABASE =============
-*/
+    const env = await response.json();
 
-const { createClient } = supabase;
+    supabaseClient = supabase.createClient(
+        env.supabase_url,
+        env.supabase_key
+    );
 
-const client = createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
+}
+
+loadEnv();
 
 /*
 # ============= ADD DATA =============
 */
 
-window.addData = async () => {
+async function addData(){
 
     const status = document.getElementById("status");
 
@@ -110,11 +117,16 @@ window.addData = async () => {
         return;
     }
 
+    if(!supabaseClient){
+        status.innerHTML = "Supabase belum ready";
+        return;
+    }
+
     status.innerHTML = "Loading...";
 
     try{
 
-        const { data, error } = await client
+        const { data, error } = await supabaseClient
             .from("test_data")
             .insert([
                 {
@@ -140,7 +152,7 @@ window.addData = async () => {
 
     }
 
-};
+}
 
 </script>
 
