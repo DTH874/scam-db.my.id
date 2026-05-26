@@ -2,6 +2,10 @@
 
 import { createClient } from "@supabase/supabase-js";
 
+/*
+# ============= SUPABASE CLIENT =============
+*/
+
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -9,6 +13,11 @@ const supabase = createClient(
         auth: {
             autoRefreshToken: false,
             persistSession: false
+        },
+        global: {
+            headers: {
+                "X-Client-Info": "scammer-db"
+            }
         }
     }
 );
@@ -29,80 +38,51 @@ function escapeHtml(text = "") {
 }
 
 /*
-# ============= VALIDASI URL BUKTI =============
-# HANYA TOP4TOP
+# ============= VALID URL TOP4TOP =============
 */
 
 function validTop4top(url = "") {
 
-    return /^https:\/\/top4top\.io\/.+$/i.test(
+    return /^https:\/\/top4top\.io\/[a-zA-Z0-9/_\-.]+$/i.test(
         String(url).trim()
     );
 
 }
 
 /*
-# ============= VALIDASI INFO URL =============
-# HANYA PASTEBIN / PASTEFY
+# ============= VALID URL INFO =============
 */
 
 function validInfo(url = "") {
 
-    if (!url) return true;
+    if (!url) {
+        return true;
+    }
 
-    return /^(https:\/\/pastebin\.com\/|https:\/\/pastefy\.app\/).+$/i.test(
+    return /^(https:\/\/pastebin\.com\/|https:\/\/pastefy\.app\/)[a-zA-Z0-9/_\-?.=&]+$/i.test(
         String(url).trim()
     );
 
 }
 
 /*
-# ============= VALIDASI SEARCH =============
+# ============= VALID SEARCH =============
 */
 
 function validSearch(input = "") {
 
-    const value = String(input).trim();
+    const value = String(input)
+        .replace(/\s+/g, " ")
+        .trim();
 
-    if (value.length < 1 || value.length > 100) {
+    if (
+        value.length < 1 ||
+        value.length > 100
+    ) {
         return false;
     }
 
-    return /^[a-zA-Z0-9_\-\s+]+$/i.test(value);
-
-}
-
-/*
-# ============= VERIFY GOOGLE RECAPTCHA =============
-*/
-
-async function verifyRecaptcha(token) {
-
-    try {
-
-        const response = await fetch(
-            "https://www.google.com/recaptcha/api/siteverify",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: new URLSearchParams({
-                    secret: process.env.RECHAPCA_SECREAT_KEY,
-                    response: token
-                })
-            }
-        );
-
-        return await response.json();
-
-    } catch {
-
-        return {
-            success: false
-        };
-
-    }
+    return /^[a-zA-Z0-9_\-+\s]+$/i.test(value);
 
 }
 
@@ -118,9 +98,11 @@ async function verifyCloudflare(token, ip) {
             "https://challenges.cloudflare.com/turnstile/v0/siteverify",
             {
                 method: "POST",
+
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
+
                 body: new URLSearchParams({
                     secret: process.env.CL_TRL,
                     response: token,
@@ -129,7 +111,9 @@ async function verifyCloudflare(token, ip) {
             }
         );
 
-        return await response.json();
+        const data = await response.json();
+
+        return data;
 
     } catch {
 
@@ -148,27 +132,33 @@ async function verifyCloudflare(token, ip) {
 export default async function handler(req, res) {
 
     /*
-    # ============= RESPONSE JSON ONLY =============
-    */
-
-    res.setHeader(
-        "Content-Type",
-        "application/json"
-    );
-
-    /*
     # ============= SECURITY HEADERS =============
     */
 
     res.setHeader(
+        "Content-Type",
+        "application/json; charset=utf-8"
+    );
+
+    res.setHeader(
         "Cache-Control",
-        "no-store"
+        "no-store, no-cache, must-revalidate"
+    );
+
+    res.setHeader(
+        "Pragma",
+        "no-cache"
+    );
+
+    res.setHeader(
+        "Expires",
+        "0"
     );
 
     try {
 
         /*
-        # ============= METHOD CHECK =============
+        # ============= METHOD VALIDATION =============
         */
 
         if (req.method !== "POST") {
@@ -181,18 +171,20 @@ export default async function handler(req, res) {
         }
 
         /*
-        # ============= BODY CHECK =============
+        # ============= BODY VALIDATION =============
         */
 
-        const body = req.body || {};
+        const body =
+            typeof req.body === "object"
+            && req.body !== null
+                ? req.body
+                : {};
 
         const search = String(
             body.search || ""
-        ).trim();
-
-        const recaptchaToken = String(
-            body.recaptchaToken || ""
-        ).trim();
+        )
+            .replace(/\s+/g, " ")
+            .trim();
 
         const cloudflareToken = String(
             body.cloudflareToken || ""
@@ -200,7 +192,6 @@ export default async function handler(req, res) {
 
         if (
             !search ||
-            !recaptchaToken ||
             !cloudflareToken
         ) {
 
@@ -229,28 +220,12 @@ export default async function handler(req, res) {
         */
 
         const clientIp =
-            req.headers["x-forwarded-for"]?.split(",")[0]?.trim()
+            req.headers["cf-connecting-ip"]
+            || req.headers["x-forwarded-for"]?.split(",")[0]?.trim()
             || "0.0.0.0";
 
         /*
-        # ============= VERIFY RECAPTCHA =============
-        */
-
-        const recaptcha = await verifyRecaptcha(
-            recaptchaToken
-        );
-
-        if (!recaptcha.success) {
-
-            return res.status(403).json({
-                status: false,
-                message: "reCAPTCHA failed"
-            });
-
-        }
-
-        /*
-        # ============= VERIFY CLOUDFLARE =============
+        # ============= VERIFY TURNSTILE =============
         */
 
         const cloudflare = await verifyCloudflare(
@@ -262,13 +237,13 @@ export default async function handler(req, res) {
 
             return res.status(403).json({
                 status: false,
-                message: "Cloudflare failed"
+                message: "Cloudflare verification failed"
             });
 
         }
 
         /*
-        # ============= QUERY BUILD =============
+        # ============= BUILD QUERY =============
         */
 
         let query = supabase
@@ -285,7 +260,7 @@ export default async function handler(req, res) {
             .limit(50);
 
         /*
-        # ============= SEARCH PHONE =============
+        # ============= PHONE SEARCH =============
         */
 
         if (/^62\d{6,20}$/.test(search)) {
@@ -298,7 +273,7 @@ export default async function handler(req, res) {
         }
 
         /*
-        # ============= SEARCH NAME =============
+        # ============= NAME SEARCH =============
         */
 
         else {
@@ -332,40 +307,44 @@ export default async function handler(req, res) {
         # ============= SAFE OUTPUT =============
         */
 
-        const safeData = (data || []).map((item) => ({
+        const safeData = Array.isArray(data)
+            ? data.map((item) => ({
 
-            nomor_hp: escapeHtml(
-                item.nomor_hp || ""
-            ),
+                nomor_hp: escapeHtml(
+                    item.nomor_hp || ""
+                ),
 
-            nama: escapeHtml(
-                item.nama || ""
-            ),
+                nama: escapeHtml(
+                    item.nama || ""
+                ),
 
-            nominal: escapeHtml(
-                item.nominal || ""
-            ),
+                nominal: escapeHtml(
+                    item.nominal || ""
+                ),
 
-            alasan: escapeHtml(
-                item.alasan || ""
-            ),
+                alasan: escapeHtml(
+                    item.alasan || ""
+                ),
 
-            info_lain: validInfo(item.info_lain)
-                ? item.info_lain
-                : "",
+                info_lain:
+                    validInfo(item.info_lain)
+                        ? item.info_lain
+                        : "",
 
-            bukti: validTop4top(item.bukti)
-                ? item.bukti
-                : "",
+                bukti:
+                    validTop4top(item.bukti)
+                        ? item.bukti
+                        : "",
 
-            tanggal: escapeHtml(
-                item.tanggal || ""
-            )
+                tanggal: escapeHtml(
+                    item.tanggal || ""
+                )
 
-        }));
+            }))
+            : [];
 
         /*
-        # ============= SUCCESS =============
+        # ============= SUCCESS RESPONSE =============
         */
 
         return res.status(200).json({
@@ -374,10 +353,10 @@ export default async function handler(req, res) {
             result: safeData
         });
 
-    } catch (err) {
+    } catch {
 
         /*
-        # ============= ERROR =============
+        # ============= INTERNAL ERROR =============
         */
 
         return res.status(500).json({
