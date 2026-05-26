@@ -9,22 +9,28 @@ const supabase = createClient(
 
 export default async function handler(req, res){
 
+    res.setHeader("Content-Type", "application/json");
+
     try{
 
         if(req.method !== "POST"){
+
             return res.status(405).json({
                 status:false,
                 message:"Method not allowed"
             });
+
         }
 
         const { name } = req.body;
 
         if(!name){
+
             return res.status(400).json({
                 status:false,
                 message:"Name kosong"
             });
+
         }
 
         const { data, error } = await supabase
