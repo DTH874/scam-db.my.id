@@ -4,12 +4,22 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
+        }
+    }
 );
+
+/*
+# ============= ESCAPE HTML =============
+*/
 
 function escapeHtml(text = "") {
 
-    return text
+    return String(text)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
@@ -18,70 +28,148 @@ function escapeHtml(text = "") {
 
 }
 
+/*
+# ============= VALIDASI URL BUKTI =============
+# HANYA TOP4TOP
+*/
+
 function validTop4top(url = "") {
 
-    return /^https:\/\/top4top\.io\/.+/i.test(url);
+    return /^https:\/\/top4top\.io\/.+$/i.test(
+        String(url).trim()
+    );
 
 }
+
+/*
+# ============= VALIDASI INFO URL =============
+# HANYA PASTEBIN / PASTEFY
+*/
 
 function validInfo(url = "") {
 
     if (!url) return true;
 
-    return /^(https:\/\/pastebin\.com\/|https:\/\/pastefy\.app\/).+/i.test(url);
+    return /^(https:\/\/pastebin\.com\/|https:\/\/pastefy\.app\/).+$/i.test(
+        String(url).trim()
+    );
 
 }
+
+/*
+# ============= VALIDASI SEARCH =============
+*/
 
 function validSearch(input = "") {
 
-    return /^[a-zA-Z0-9_\-\s+]{1,100}$/.test(input);
+    const value = String(input).trim();
+
+    if (value.length < 1 || value.length > 100) {
+        return false;
+    }
+
+    return /^[a-zA-Z0-9_\-\s+]+$/i.test(value);
 
 }
+
+/*
+# ============= VERIFY GOOGLE RECAPTCHA =============
+*/
 
 async function verifyRecaptcha(token) {
 
-    const response = await fetch(
-        "https://www.google.com/recaptcha/api/siteverify",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: new URLSearchParams({
-                secret: process.env.RECHAPCA_SECREAT_KEY,
-                response: token
-            })
-        }
-    );
+    try {
 
-    return await response.json();
+        const response = await fetch(
+            "https://www.google.com/recaptcha/api/siteverify",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    secret: process.env.RECHAPCA_SECREAT_KEY,
+                    response: token
+                })
+            }
+        );
+
+        return await response.json();
+
+    } catch {
+
+        return {
+            success: false
+        };
+
+    }
 
 }
+
+/*
+# ============= VERIFY CLOUDFLARE TURNSTILE =============
+*/
 
 async function verifyCloudflare(token, ip) {
 
-    const response = await fetch(
-        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: new URLSearchParams({
-                secret: process.env.CL_TRL,
-                response: token,
-                remoteip: ip
-            })
-        }
-    );
+    try {
 
-    return await response.json();
+        const response = await fetch(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    secret: process.env.CL_TRL,
+                    response: token,
+                    remoteip: ip
+                })
+            }
+        );
+
+        return await response.json();
+
+    } catch {
+
+        return {
+            success: false
+        };
+
+    }
 
 }
 
+/*
+# ============= MAIN HANDLER =============
+*/
+
 export default async function handler(req, res) {
 
+    /*
+    # ============= RESPONSE JSON ONLY =============
+    */
+
+    res.setHeader(
+        "Content-Type",
+        "application/json"
+    );
+
+    /*
+    # ============= SECURITY HEADERS =============
+    */
+
+    res.setHeader(
+        "Cache-Control",
+        "no-store"
+    );
+
     try {
+
+        /*
+        # ============= METHOD CHECK =============
+        */
 
         if (req.method !== "POST") {
 
@@ -92,13 +180,29 @@ export default async function handler(req, res) {
 
         }
 
-        const {
-            search,
-            recaptchaToken,
-            cloudflareToken
-        } = req.body;
+        /*
+        # ============= BODY CHECK =============
+        */
 
-        if (!search || !recaptchaToken || !cloudflareToken) {
+        const body = req.body || {};
+
+        const search = String(
+            body.search || ""
+        ).trim();
+
+        const recaptchaToken = String(
+            body.recaptchaToken || ""
+        ).trim();
+
+        const cloudflareToken = String(
+            body.cloudflareToken || ""
+        ).trim();
+
+        if (
+            !search ||
+            !recaptchaToken ||
+            !cloudflareToken
+        ) {
 
             return res.status(400).json({
                 status: false,
@@ -106,6 +210,10 @@ export default async function handler(req, res) {
             });
 
         }
+
+        /*
+        # ============= INPUT VALIDATION =============
+        */
 
         if (!validSearch(search)) {
 
@@ -116,9 +224,21 @@ export default async function handler(req, res) {
 
         }
 
-        const clientIp = req.headers["x-forwarded-for"] || "0.0.0.0";
+        /*
+        # ============= CLIENT IP =============
+        */
 
-        const recaptcha = await verifyRecaptcha(recaptchaToken);
+        const clientIp =
+            req.headers["x-forwarded-for"]?.split(",")[0]?.trim()
+            || "0.0.0.0";
+
+        /*
+        # ============= VERIFY RECAPTCHA =============
+        */
+
+        const recaptcha = await verifyRecaptcha(
+            recaptchaToken
+        );
 
         if (!recaptcha.success) {
 
@@ -128,6 +248,10 @@ export default async function handler(req, res) {
             });
 
         }
+
+        /*
+        # ============= VERIFY CLOUDFLARE =============
+        */
 
         const cloudflare = await verifyCloudflare(
             cloudflareToken,
@@ -143,41 +267,88 @@ export default async function handler(req, res) {
 
         }
 
+        /*
+        # ============= QUERY BUILD =============
+        */
+
         let query = supabase
             .from("scammer_db")
-            .select("*")
+            .select(`
+                nomor_hp,
+                nama,
+                nominal,
+                alasan,
+                info_lain,
+                bukti,
+                tanggal
+            `)
             .limit(50);
 
-        if (/^62\d+$/.test(search)) {
+        /*
+        # ============= SEARCH PHONE =============
+        */
 
-            query = query.eq("nomor_hp", search);
+        if (/^62\d{6,20}$/.test(search)) {
 
-        } else {
-
-            query = query.ilike("nama", `%${search}%`);
+            query = query.eq(
+                "nomor_hp",
+                search
+            );
 
         }
 
-        const { data, error } = await query;
+        /*
+        # ============= SEARCH NAME =============
+        */
+
+        else {
+
+            query = query.ilike(
+                "nama",
+                `%${search}%`
+            );
+
+        }
+
+        /*
+        # ============= EXECUTE QUERY =============
+        */
+
+        const {
+            data,
+            error
+        } = await query;
 
         if (error) {
 
             return res.status(500).json({
                 status: false,
-                message: error.message
+                message: "Database error"
             });
 
         }
 
-        const safeData = data.map((item) => ({
+        /*
+        # ============= SAFE OUTPUT =============
+        */
 
-            nomor_hp: escapeHtml(item.nomor_hp || ""),
+        const safeData = (data || []).map((item) => ({
 
-            nama: escapeHtml(item.nama || ""),
+            nomor_hp: escapeHtml(
+                item.nomor_hp || ""
+            ),
 
-            nominal: escapeHtml(item.nominal || ""),
+            nama: escapeHtml(
+                item.nama || ""
+            ),
 
-            alasan: escapeHtml(item.alasan || ""),
+            nominal: escapeHtml(
+                item.nominal || ""
+            ),
+
+            alasan: escapeHtml(
+                item.alasan || ""
+            ),
 
             info_lain: validInfo(item.info_lain)
                 ? item.info_lain
@@ -187,20 +358,31 @@ export default async function handler(req, res) {
                 ? item.bukti
                 : "",
 
-            tanggal: item.tanggal
+            tanggal: escapeHtml(
+                item.tanggal || ""
+            )
 
         }));
 
+        /*
+        # ============= SUCCESS =============
+        */
+
         return res.status(200).json({
             status: true,
+            total: safeData.length,
             result: safeData
         });
 
     } catch (err) {
 
+        /*
+        # ============= ERROR =============
+        */
+
         return res.status(500).json({
             status: false,
-            message: err.message
+            message: "Internal server error"
         });
 
     }
