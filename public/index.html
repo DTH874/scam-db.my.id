@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCAMMER DB</title>
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#0f172a;
+    color:white;
+    font-family:Arial;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.main{
+    width:100%;
+    max-width:900px;
+    background:#111827;
+    border-radius:15px;
+    padding:25px;
+    border:1px solid #1f2937;
+}
+
+.title{
+    font-size:30px;
+    margin-bottom:20px;
+}
+
+.searchBox{
+    display:flex;
+    gap:10px;
+}
+
+input{
+    width:100%;
+    padding:15px;
+    border:none;
+    outline:none;
+    border-radius:10px;
+    background:#1f2937;
+    color:white;
+}
+
+button{
+    padding:15px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    background:#2563eb;
+    color:white;
+    min-width:120px;
+}
+
+.card{
+    margin-top:20px;
+    background:#1f2937;
+    border-radius:12px;
+    padding:20px;
+}
+
+img{
+    width:100%;
+    max-width:300px;
+    border-radius:10px;
+    margin-top:10px;
+}
+
+a{
+    color:#60a5fa;
+}
+
+.watermark{
+    margin-top:20px;
+    opacity:.5;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="main">
+
+    <div class="title">
+        SCAMMER DB
+    </div>
+
+    <div class="searchBox">
+
+        <input
+            type="text"
+            id="search"
+            placeholder="628xxxx atau nama"
+            maxlength="100"
+        >
+
+        <button onclick="searchData()">
+            SEARCH
+        </button>
+
+    </div>
+
+    <br>
+
+    <div
+        class="cf-turnstile"
+        data-sitekey="0x4AAAAAADWGW6loSQy9qZqQ"
+        id="cf-box"
+    ></div>
+
+    <br>
+
+    <div
+        class="g-recaptcha"
+        data-sitekey="6Le9GvwsAAAAAFXPJZN153eZovhhyj7RoD6EoteK"
+    ></div>
+
+    <div id="result"></div>
+
+    <div class="watermark">
+        BY POLOSS
+    </div>
+
+</div>
+
+<script>
+
+function cleanInput(value){
+
+    return value
+        .replace(/[<>"'`;(){}]/g, "")
+        .trim();
+
+}
+
+async function searchData(){
+
+    const result = document.getElementById("result");
+
+    const search = cleanInput(
+        document.getElementById("search").value
+    );
+
+    if(!search){
+
+        result.innerHTML = "Input kosong";
+        return;
+
+    }
+
+    const recaptchaToken = grecaptcha.getResponse();
+
+    const cloudflareToken = document.querySelector(
+        'input[name="cf-turnstile-response"]'
+    )?.value;
+
+    if(!recaptchaToken){
+
+        result.innerHTML = "reCAPTCHA wajib";
+        return;
+
+    }
+
+    if(!cloudflareToken){
+
+        result.innerHTML = "Cloudflare wajib";
+        return;
+
+    }
+
+    result.innerHTML = "Loading...";
+
+    try{
+
+        const response = await fetch("/api/search",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                search,
+                recaptchaToken,
+                cloudflareToken
+            })
+        });
+
+        const data = await response.json();
+
+        if(!data.status){
+
+            result.innerHTML = data.message;
+            return;
+
+        }
+
+        if(data.result.length === 0){
+
+            result.innerHTML = "Data tidak ditemukan";
+            return;
+
+        }
+
+        result.innerHTML = "";
+
+        data.result.forEach(item => {
+
+            const div = document.createElement("div");
+
+            div.className = "card";
+
+            div.innerHTML = `
+                <b>Nomor HP:</b> ${item.nomor_hp}<br><br>
+
+                <b>Nama:</b> ${item.nama}<br><br>
+
+                <b>Nominal:</b> ${item.nominal}<br><br>
+
+                <b>Alasan:</b> ${item.alasan}<br><br>
+
+                <b>Info Lain:</b>
+                ${item.info_lain
+                    ? `<a href="${item.info_lain}" target="_blank">OPEN</a>`
+                    : "-"
+                }
+                <br><br>
+
+                <b>Bukti:</b><br>
+                ${item.bukti
+                    ? `<img src="${item.bukti}">`
+                    : "-"
+                }
+                <br><br>
+
+                <b>Tanggal:</b> ${item.tanggal}
+            `;
+
+            result.appendChild(div);
+
+        });
+
+    }catch(err){
+
+        result.innerHTML = err.message;
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
