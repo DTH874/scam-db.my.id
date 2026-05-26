@@ -1,6 +1,8 @@
 {
   "cleanUrls": true,
 
+  "trailingSlash": false,
+
   "headers": [
     {
       "source": "/(.*)",
@@ -18,17 +20,24 @@
           "value": "strict-origin-when-cross-origin"
         },
         {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self' https://www.google.com https://www.gstatic.com https://challenges.cloudflare.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://challenges.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' https://top4top.io data:; frame-src https://www.google.com https://challenges.cloudflare.com; connect-src 'self';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://top4top.io data:; frame-src https://www.google.com https://challenges.cloudflare.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';"
         }
       ]
-    }
-  ],
+    },
 
-  "rewrites": [
     {
-      "source": "/",
-      "destination": "/public/index.html"
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
     }
   ]
 }
