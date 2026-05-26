@@ -1,492 +1,148 @@
+<!--
+# ============= BY POLOSS =============
+# index.html
+# Auto Ambil ENV Dari Vercel
+-->
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Scamer DB | Anti Scam Database</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Test</title>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        body {
-            background: radial-gradient(circle at 10% 20%, #0a0a0c, #030304);
-            min-height: 100vh;
+        body{
+            background:#0f172a;
+            color:white;
+            font-family:Arial;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
         }
-        .glass-card {
-            background: rgba(12, 12, 18, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(50, 50, 80, 0.5);
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.8);
+
+        .box{
+            width:350px;
+            background:#111827;
+            padding:20px;
+            border-radius:12px;
         }
-        .neon-border {
-            transition: all 0.2s ease;
+
+        input,button{
+            width:100%;
+            padding:12px;
+            margin-top:10px;
+            border:none;
+            border-radius:8px;
         }
-        .neon-border:focus {
-            border-color: #8b5cf6;
-            box-shadow: 0 0 0 3px rgba(139,92,246,0.3);
+
+        input{
+            background:#1f2937;
+            color:white;
         }
-        .btn-neon {
-            background: linear-gradient(95deg, #1a1a2e, #0f0f1a);
-            border: 1px solid #334155;
-            transition: 0.2s;
+
+        button{
+            background:#2563eb;
+            color:white;
+            cursor:pointer;
         }
-        .btn-neon:hover {
-            border-color: #8b5cf6;
-            background: #1e1e2f;
-            box-shadow: 0 0 8px rgba(139,92,246,0.4);
-        }
-        .result-card {
-            background: #0b0b12e6;
-            border-left: 4px solid #ef4444;
-            transition: 0.2s;
-        }
-        .proof-img {
-            max-width: 100%;
-            border-radius: 0.5rem;
-            border: 1px solid #2a2a3a;
-        }
-        .admin-badge {
-            background: #1f1f2e;
-            border: 1px solid #2d2d44;
-        }
-        input, textarea {
-            background: #0c0c14;
-            border: 1px solid #27273a;
-            color: #e2e2f0;
-        }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0a0a0f; }
-        ::-webkit-scrollbar-thumb { background: #3b3b5c; border-radius: 10px; }
-        .turnstile-wrapper {
-            transform: scale(0.9);
-            margin: 0 auto;
-        }
-        .cf-turnstile {
-            display: flex;
-            justify-content: center;
+
+        #status{
+            margin-top:15px;
+            word-break:break-word;
         }
     </style>
 </head>
-<body class="text-gray-200">
+<body>
 
-    <!-- Main Container -->
-    <div class="max-w-5xl mx-auto px-4 py-8 md:py-12">
-        <!-- Header Logo / Title -->
-        <div class="flex justify-between items-center mb-8 border-b border-purple-900/40 pb-4">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-black tracking-tight bg-gradient-to-r from-red-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">SCAMER DB</h1>
-                <p class="text-xs text-gray-500 mt-1 tracking-wider">ANTI SCAM INTELLIGENCE DATABASE</p>
-            </div>
-            <div>
-                <button id="openAdminBtn" class="text-sm px-4 py-2 rounded-md border border-gray-700 bg-black/30 hover:border-purple-500 transition flex items-center gap-2"><i class="fas fa-shield-alt"></i> <span>Admin</span></button>
-            </div>
-        </div>
+<div class="box">
 
-        <!-- Search Section -->
-        <div class="glass-card rounded-2xl p-6 md:p-8 mb-10">
-            <h2 class="text-xl font-semibold mb-4 flex items-center gap-2"><i class="fas fa-search text-purple-400"></i> LACAK PENIPU</h2>
-            <div class="flex flex-col md:flex-row gap-4">
-                <div class="flex-1">
-                    <input type="text" id="searchInput" placeholder="Masukkan nomor HP (62xxxxx) atau nama scamer..." class="w-full px-5 py-3 rounded-xl bg-black/40 border border-gray-700 focus:outline-none neon-border">
-                    <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle"></i> Format nomor otomatis dibersihkan: 62xxx (tanpa '+' atau '0')</p>
-                </div>
-                <div class="flex flex-col gap-3 items-end">
-                    <div id="cf-turnstile-search" class="cf-turnstile" data-sitekey="" data-callback="onTurnstileSuccess" data-theme="dark"></div>
-                    <button id="searchBtn" class="btn-neon px-8 py-3 rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><i class="fas fa-skull"></i> SEARCH</button>
-                </div>
-            </div>
-            <div id="searchStatus" class="mt-3 text-sm text-amber-400 hidden"></div>
-        </div>
+    <h2>SUPABASE TEST</h2>
 
-        <!-- Result Display Section -->
-        <div id="resultContainer" class="space-y-5"></div>
+    <input type="text" id="name" placeholder="Nama">
 
-        <!-- Admin Login Modal -->
-        <div id="adminModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all">
-            <div class="glass-card rounded-2xl w-full max-w-md p-6 border border-gray-700 shadow-2xl">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-2xl font-bold"><i class="fas fa-lock text-purple-400"></i> ADMIN ACCESS</h3>
-                    <button id="closeModalBtn" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-                </div>
-                <div>
-                    <input type="text" id="adminUsername" placeholder="Username" autocomplete="off" class="w-full px-4 py-3 rounded-lg bg-black/50 border border-gray-600 mb-3">
-                    <input type="password" id="adminPassword" placeholder="Password" autocomplete="off" class="w-full px-4 py-3 rounded-lg bg-black/50 border border-gray-600 mb-4">
-                    <div class="g-recaptcha mb-4" data-sitekey="" data-theme="dark"></div>
-                    <button id="loginAdminBtn" class="w-full bg-purple-700 hover:bg-purple-800 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2"><i class="fas fa-key"></i> LOGIN</button>
-                    <p id="adminError" class="text-red-400 text-sm mt-3 hidden text-center"></p>
-                </div>
-            </div>
-        </div>
+    <button onclick="addData()">ADD DATA</button>
 
-        <!-- Admin Panel (add data) -->
-        <div id="adminPanel" class="glass-card rounded-2xl p-6 mt-8 hidden">
-            <div class="flex items-center justify-between border-b border-purple-900/40 pb-3 mb-5">
-                <h2 class="text-2xl font-bold flex gap-2"><i class="fas fa-database text-red-400"></i> ADMIN PANEL - TAMBAH DATA SCAMER</h2>
-                <button id="logoutAdminBtn" class="text-xs px-3 py-1 bg-red-900/40 rounded-md hover:bg-red-800/50"><i class="fas fa-sign-out-alt"></i> Logout</button>
-            </div>
-            <form id="addScammerForm" class="grid md:grid-cols-2 gap-5">
-                <div>
-                    <label class="block text-sm font-semibold mb-1">NOMOR HP <span class="text-red-400">*</span></label>
-                    <input type="text" id="formPhone" placeholder="628123456789" class="w-full px-4 py-2 rounded-lg bg-black/50 border border-gray-600" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">NAMA (opsional)</label>
-                    <input type="text" id="formName" placeholder="Nama scamer" class="w-full px-4 py-2 rounded-lg bg-black/50 border border-gray-600">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">NOMINAL (opsional)</label>
-                    <input type="text" id="formAmount" placeholder="Rp 50.000.000" class="w-full px-4 py-2 rounded-lg bg-black/50 border border-gray-600">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1">ALASAN</label>
-                    <textarea id="formReason" rows="2" placeholder="Modus penipuan..." class="w-full px-4 py-2 rounded-lg bg-black/50 border border-gray-600"></textarea>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold mb-1">INFO LAIN (URL pastebin/pastefy)</label>
-                    <input type="url" id="formInfoLink" placeholder="https://pastebin.com/xxx" class="w-full px-4 py-2 rounded-lg bg-black/50 border border-gray-600">
-                    <p class="text-xs text-gray-400 mt-1">* Hanya tautan yang valid (anti XSS/JS otomatis)</p>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold mb-1">BUKTI (URL gambar) <span class="text-red-400">*wajib domain top4top.io</span></label>
-                    <input type="url" id="formProof" placeholder="https://top4top.io/....jpg" class="w-full px-4 py-2 rounded-lg bg-black/50 border border-gray-600" required>
-                </div>
-                <div class="md:col-span-2 flex justify-end">
-                    <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 px-6 py-2 rounded-xl font-bold transition flex gap-2"><i class="fas fa-plus-circle"></i> TAMBAH SCAMER</button>
-                </div>
-            </form>
-            <div id="adminMsg" class="mt-4 text-sm text-center"></div>
-        </div>
-    </div>
+    <div id="status"></div>
 
-    <script>
-        // ============================================================
-        // AMBIL DARI ENVIRONMENT VARIABLES (Vercel)
-        // Nama variable PERSIS seperti yang diminta:
-        // - CL_TRL (site key untuk Cloudflare Turnstile)
-        // - Supa_api_key (Supabase Publishable key / ANON key)
-        // - supa_PROJECT_URL (Supabase Project URL)
-        // - reCAPTCHA_secreatkey (site key untuk Google reCAPTCHA)
-        // - ANON_PUB_SUPA (fallback / alternate key)
-        // - ADMIN_USERNAME_ENV
-        // - ADMIN_PASSWORD_ENV
-        // ============================================================
-        
-        // Konfigurasi dari server-side (Vercel akan inject saat build)
-        // Karena ini client-side, kita baca dari window.__ENV atau dari meta tags
-        // Untuk keamanan, Vercel akan mengganti placeholder ini saat build
-        
-        let CONFIG = {
-            CL_TRL: '',
-            Supa_api_key: '',
-            supa_PROJECT_URL: '',
-            reCAPTCHA_secreatkey: '',
-            ANON_PUB_SUPA: '',
-            ADMIN_USERNAME_ENV: '',
-            ADMIN_PASSWORD_ENV: ''
-        };
-        
-        // Coba ambil dari berbagai sumber
-        (function loadConfig() {
-            // Method 1: Dari window.__ENV (jika diatur server-side)
-            if (typeof window !== 'undefined' && window.__ENV) {
-                CONFIG = { ...CONFIG, ...window.__ENV };
-            }
-            
-            // Method 2: Dari meta tags
-            const metaMap = {
-                'CL_TRL': 'cl-trl-site-key',
-                'Supa_api_key': 'supa-api-key',
-                'supa_PROJECT_URL': 'supa-project-url',
-                'reCAPTCHA_secreatkey': 'recaptcha-site-key',
-                'ANON_PUB_SUPA': 'anon-pub-supa',
-                'ADMIN_USERNAME_ENV': 'admin-username',
-                'ADMIN_PASSWORD_ENV': 'admin-password'
-            };
-            
-            for (const [key, metaName] of Object.entries(metaMap)) {
-                const meta = document.querySelector(`meta[name="${metaName}"]`);
-                if (meta && meta.getAttribute('content')) {
-                    CONFIG[key] = meta.getAttribute('content');
+    <br>
+    <small>BY POLOSS</small>
+
+</div>
+
+<script type="module">
+
+/*
+# ============= IMPORT ENV VERCEL =============
+# HARUS NEXT.JS / VITE
+*/
+
+const SUPABASE_URL = import.meta.env.VITE_NEXT_PUBLIC_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
+
+const SUPABASE_KEY = import.meta.env.VITE_NEXT_PUBLIC_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+/*
+# ============= INIT SUPABASE =============
+*/
+
+const { createClient } = supabase;
+
+const client = createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+/*
+# ============= ADD DATA =============
+*/
+
+window.addData = async () => {
+
+    const status = document.getElementById("status");
+
+    const name = document.getElementById("name").value.trim();
+
+    if(!name){
+        status.innerHTML = "Nama kosong";
+        return;
+    }
+
+    status.innerHTML = "Loading...";
+
+    try{
+
+        const { data, error } = await client
+            .from("test_data")
+            .insert([
+                {
+                    name:name
                 }
-            }
-            
-            // Method 3: Dari global variable (jika di-set inline)
-            if (typeof CL_TRL !== 'undefined') CONFIG.CL_TRL = CL_TRL;
-            if (typeof Supa_api_key !== 'undefined') CONFIG.Supa_api_key = Supa_api_key;
-            if (typeof supa_PROJECT_URL !== 'undefined') CONFIG.supabaseUrl = supa_PROJECT_URL;
-            if (typeof reCAPTCHA_secreatkey !== 'undefined') CONFIG.reCAPTCHA_secreatkey = reCAPTCHA_secreatkey;
-            if (typeof ANON_PUB_SUPA !== 'undefined') CONFIG.ANON_PUB_SUPA = ANON_PUB_SUPA;
-            if (typeof ADMIN_USERNAME_ENV !== 'undefined') CONFIG.ADMIN_USERNAME_ENV = ADMIN_USERNAME_ENV;
-            if (typeof ADMIN_PASSWORD_ENV !== 'undefined') CONFIG.ADMIN_PASSWORD_ENV = ADMIN_PASSWORD_ENV;
-            
-            // Prioritaskan ANON_PUB_SUPA jika Supa_api_key kosong
-            if (!CONFIG.Supa_api_key && CONFIG.ANON_PUB_SUPA) {
-                CONFIG.Supa_api_key = CONFIG.ANON_PUB_SUPA;
-            }
-        })();
-        
-        // Set Turnstile site key
-        const turnstileDiv = document.querySelector('.cf-turnstile');
-        if (turnstileDiv && CONFIG.CL_TRL) {
-            turnstileDiv.setAttribute('data-sitekey', CONFIG.CL_TRL);
+            ])
+            .select();
+
+        if(error){
+            status.innerHTML = error.message;
+            return;
         }
-        
-        // Set reCAPTCHA site key
-        const recaptchaDiv = document.querySelector('.g-recaptcha');
-        if (recaptchaDiv && CONFIG.reCAPTCHA_secreatkey) {
-            recaptchaDiv.setAttribute('data-sitekey', CONFIG.reCAPTCHA_secreatkey);
-        }
-        
-        // Admin credentials dari ENV
-        const ADMIN_USERNAME = CONFIG.ADMIN_USERNAME_ENV || 'Sc4m3rAdmin';
-        const ADMIN_PASSWORD = CONFIG.ADMIN_PASSWORD_ENV || 'SecureDb2025!';
-        
-        // Supabase client
-        let supabase = null;
-        if (CONFIG.Supa_api_key && CONFIG.supabaseUrl) {
-            supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.Supa_api_key);
-        } else if (CONFIG.Supa_api_key && CONFIG.supabaseUrl) {
-            supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.Supa_api_key);
-        } else {
-            console.warn('Supabase tidak dikonfigurasi. Set Supa_api_key dan supa_PROJECT_URL di Vercel Environment Variables.');
-        }
-        
-        // State
-        let turnstileToken = null;
-        let adminLoggedIn = false;
-        
-        // Cloudflare Turnstile callback
-        window.onTurnstileSuccess = function(token) {
-            turnstileToken = token;
-            document.getElementById("searchStatus").classList.add("hidden");
-        };
-        
-        // Helper: sanitasi input anti XSS
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        }
-        
-        // Format nomor hp
-        function normalizePhone(input) {
-            let raw = input.trim();
-            raw = raw.replace(/[^\d+]/g, '');
-            if (raw.startsWith('+')) raw = raw.substring(1);
-            if (raw.startsWith('0')) raw = '62' + raw.substring(1);
-            if (!raw.startsWith('62')) raw = '62' + raw;
-            return raw;
-        }
-        
-        // Validasi proof URL hanya dari top4top.io
-        function isValidProofUrl(url) {
-            if (!url) return false;
-            try {
-                const u = new URL(url);
-                return u.hostname === 'top4top.io' || u.hostname.endsWith('.top4top.io');
-            } catch(e) { return false; }
-        }
-        
-        function sanitizeInfoLink(url) {
-            if (!url) return null;
-            try {
-                let u = new URL(url);
-                if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
-                return u.href;
-            } catch(e) { return null; }
-        }
-        
-        // Search ke Supabase
-        async function performSearch() {
-            const searchRaw = document.getElementById("searchInput").value.trim();
-            if (!searchRaw) {
-                showResultMessage("Masukkan nomor atau nama scamer.", "warning");
-                return;
-            }
-            if (!turnstileToken) {
-                document.getElementById("searchStatus").innerHTML = "<i class='fas fa-times-circle'></i> Selesaikan verifikasi Cloudflare Turnstile!";
-                document.getElementById("searchStatus").classList.remove("hidden");
-                return;
-            }
-            document.getElementById("searchStatus").classList.add("hidden");
-            
-            if (!supabase) {
-                showResultMessage("Database belum terhubung. Periksa konfigurasi Supabase di Environment Variables.", "error");
-                return;
-            }
-            
-            let isPhoneSearch = /^[\d\+]+$/.test(searchRaw.replace(/\s/g,'')) || searchRaw.startsWith("62") || searchRaw.includes("+");
-            let query;
-            if (isPhoneSearch) {
-                let phoneNorm = normalizePhone(searchRaw);
-                query = supabase.from('scammers').select('*').eq('phone', phoneNorm);
-            } else {
-                let safeName = searchRaw.trim();
-                query = supabase.from('scammers').select('*').ilike('name', `%${safeName}%`);
-            }
-            
-            const { data, error } = await query;
-            if (error) {
-                console.error(error);
-                showResultMessage("Error database: "+error.message, "error");
-                return;
-            }
-            renderSearchResults(data);
-            
-            // Reset turnstile
-            turnstileToken = null;
-            if(window.turnstile) window.turnstile.reset(document.querySelector('.cf-turnstile'));
-        }
-        
-        function showResultMessage(msg, type) {
-            const container = document.getElementById("resultContainer");
-            container.innerHTML = `<div class="glass-card p-6 text-center rounded-xl border border-${type === 'error' ? 'red' : 'yellow'}-800/50"><i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i> ${escapeHtml(msg)}</div>`;
-        }
-        
-        function renderSearchResults(scammers) {
-            const container = document.getElementById("resultContainer");
-            if (!scammers || scammers.length === 0) {
-                container.innerHTML = `<div class="glass-card p-8 text-center"><i class="fas fa-ghost text-3xl mb-2 block"></i> Tidak ditemukan data scamer dalam database.</div>`;
-                return;
-            }
-            let html = '';
-            for (let s of scammers) {
-                let phoneEsc = escapeHtml(s.phone || '-');
-                let nameEsc = escapeHtml(s.name || 'Tidak diketahui');
-                let amountEsc = escapeHtml(s.amount || '-');
-                let reasonEsc = escapeHtml(s.reason || '-');
-                let infoLinkRaw = s.info_link;
-                let safeInfoLink = infoLinkRaw ? `<a href="${escapeHtml(infoLinkRaw)}" target="_blank" rel="noopener noreferrer" class="text-purple-400 break-all underline">${escapeHtml(infoLinkRaw.substring(0, 50))}</a>` : '-';
-                let proofRaw = s.proof_url;
-                let proofHtml = '-';
-                if(proofRaw && isValidProofUrl(proofRaw)) {
-                    proofHtml = `<a href="${escapeHtml(proofRaw)}" target="_blank" class="inline-block"><img src="${escapeHtml(proofRaw)}" alt="bukti" class="proof-img max-h-40 mt-2" loading="lazy"></a>`;
-                } else if(proofRaw) { proofHtml = `<span class="text-red-400">URL tidak valid (hanya top4top.io)</span>`; }
-                let dateAdded = s.date_added || s.created_at?.slice(0,10) || '-';
-                html += `
-                <div class="result-card rounded-xl p-5 border border-gray-800">
-                    <div class="grid md:grid-cols-2 gap-3">
-                        <div><span class="text-gray-400 text-sm">📞 NOMOR HP</span><div class="font-mono text-lg text-red-300">${phoneEsc}</div></div>
-                        <div><span class="text-gray-400 text-sm">👤 NAMA</span><div class="font-semibold">${nameEsc}</div></div>
-                        <div><span class="text-gray-400 text-sm">💰 NOMINAL</span><div>${amountEsc}</div></div>
-                        <div><span class="text-gray-400 text-sm">📅 TANGGAL</span><div>${escapeHtml(dateAdded)}</div></div>
-                        <div class="md:col-span-2"><span class="text-gray-400 text-sm">⚠️ ALASAN</span><div class="mt-1">${reasonEsc}</div></div>
-                        <div class="md:col-span-2"><span class="text-gray-400 text-sm">🔗 INFO LAIN</span><div class="break-all">${safeInfoLink}</div></div>
-                        <div class="md:col-span-2"><span class="text-gray-400 text-sm">🖼️ BUKTI GAMBAR</span><div>${proofHtml}</div></div>
-                    </div>
-                </div>`;
-            }
-            container.innerHTML = html;
-        }
-        
-        // Admin Login
-        document.getElementById("openAdminBtn")?.addEventListener("click", () => {
-            document.getElementById("adminModal").classList.remove("hidden");
-        });
-        document.getElementById("closeModalBtn")?.addEventListener("click", () => {
-            document.getElementById("adminModal").classList.add("hidden");
-            document.getElementById("adminError").classList.add("hidden");
-        });
-        document.getElementById("loginAdminBtn")?.addEventListener("click", async () => {
-            const user = document.getElementById("adminUsername").value.trim();
-            const pass = document.getElementById("adminPassword").value.trim();
-            const recaptchaResp = grecaptcha ? grecaptcha.getResponse() : null;
-            if (!recaptchaResp) {
-                document.getElementById("adminError").innerText = "Selesaikan reCAPTCHA terlebih dahulu.";
-                document.getElementById("adminError").classList.remove("hidden");
-                return;
-            }
-            if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
-                adminLoggedIn = true;
-                document.getElementById("adminModal").classList.add("hidden");
-                document.getElementById("adminPanel").classList.remove("hidden");
-                if(grecaptcha) grecaptcha.reset();
-                document.getElementById("adminError").classList.add("hidden");
-            } else {
-                document.getElementById("adminError").innerText = "Username / password salah!";
-                document.getElementById("adminError").classList.remove("hidden");
-                if(grecaptcha) grecaptcha.reset();
-            }
-        });
-        document.getElementById("logoutAdminBtn")?.addEventListener("click", () => {
-            adminLoggedIn = false;
-            document.getElementById("adminPanel").classList.add("hidden");
-        });
-        
-        // Add scammer data
-        document.getElementById("addScammerForm")?.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            if (!adminLoggedIn) {
-                document.getElementById("adminMsg").innerHTML = "<span class='text-red-500'>Akses ditolak. Login ulang.</span>";
-                return;
-            }
-            if (!supabase) {
-                document.getElementById("adminMsg").innerHTML = "<span class='text-red-500'>Supabase tidak terkonfigurasi.</span>";
-                return;
-            }
-            let phoneRaw = document.getElementById("formPhone").value.trim();
-            if (!phoneRaw) {
-                document.getElementById("adminMsg").innerHTML = "<span class='text-red-500'>Nomor HP wajib diisi!</span>";
-                return;
-            }
-            let phoneNorm = normalizePhone(phoneRaw);
-            let nameVal = document.getElementById("formName").value.trim() || null;
-            let amountVal = document.getElementById("formAmount").value.trim() || null;
-            let reasonVal = document.getElementById("formReason").value.trim() || null;
-            let infoLinkVal = document.getElementById("formInfoLink").value.trim();
-            let proofVal = document.getElementById("formProof").value.trim();
-            if (!proofVal || !isValidProofUrl(proofVal)) {
-                document.getElementById("adminMsg").innerHTML = "<span class='text-red-500'>Bukti harus URL gambar dari top4top.io (wajib)!</span>";
-                return;
-            }
-            let cleanInfo = infoLinkVal ? sanitizeInfoLink(infoLinkVal) : null;
-            if(infoLinkVal && !cleanInfo) {
-                document.getElementById("adminMsg").innerHTML = "<span class='text-red-500'>Info Link tidak valid (harus http/https).</span>";
-                return;
-            }
-            const newData = {
-                phone: phoneNorm,
-                name: nameVal,
-                amount: amountVal,
-                reason: reasonVal,
-                info_link: cleanInfo,
-                proof_url: proofVal,
-                date_added: new Date().toISOString().slice(0,10)
-            };
-            const { error } = await supabase.from('scammers').insert(newData);
-            if (error) {
-                if (error.code === '23505') document.getElementById("adminMsg").innerHTML = "<span class='text-red-500'>Nomor HP sudah terdaftar di database!</span>";
-                else document.getElementById("adminMsg").innerHTML = `<span class='text-red-500'>Gagal tambah: ${escapeHtml(error.message)}</span>`;
-            } else {
-                document.getElementById("adminMsg").innerHTML = "<span class='text-emerald-400'>✔ Scamer berhasil ditambahkan!</span>";
-                document.getElementById("addScammerForm").reset();
-            }
-        });
-        
-        document.getElementById("searchBtn")?.addEventListener("click", () => {
-            if (!turnstileToken) {
-                document.getElementById("searchStatus").innerHTML = "<i class='fas fa-cloud-upload-alt'></i> Harap verifikasi Cloudflare Turnstile terlebih dahulu!";
-                document.getElementById("searchStatus").classList.remove("hidden");
-                return;
-            }
-            performSearch();
-        });
-        
-        console.log('Config loaded:', {
-            hasCL_TRL: !!CONFIG.CL_TRL,
-            hasSupaKey: !!CONFIG.Supa_api_key,
-            hasSupaUrl: !!CONFIG.supabaseUrl,
-            hasRecaptcha: !!CONFIG.reCAPTCHA_secreatkey,
-            hasAdmin: !!CONFIG.ADMIN_USERNAME_ENV
-        });
-    </script>
+
+        status.innerHTML = `
+            SUCCESS
+            <br><br>
+            ${JSON.stringify(data)}
+        `;
+
+    }catch(err){
+
+        status.innerHTML = err.message;
+
+    }
+
+};
+
+</script>
+
 </body>
 </html>
