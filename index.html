@@ -10,12 +10,6 @@
 <title>SCAMMER DB</title>
 
 <script
-    src="https://www.google.com/recaptcha/api.js"
-    async
-    defer
-></script>
-
-<script
     src="https://challenges.cloudflare.com/turnstile/v0/api.js"
     async
     defer
@@ -84,6 +78,11 @@ button{
 
 button:hover{
     opacity:.9;
+}
+
+button:disabled{
+    opacity:.5;
+    cursor:not-allowed;
 }
 
 .card{
@@ -160,15 +159,6 @@ a{
         data-sitekey="0x4AAAAAADWGW6loSQy9qZqQ"
     ></div>
 
-    <br>
-
-    <!-- ============= GOOGLE RECAPTCHA ============= -->
-
-    <div
-        class="g-recaptcha"
-        data-sitekey="6Le9GvwsAAAAAFXPJZN153eZovhhyj7RoD6EoteK"
-    ></div>
-
     <div id="result"></div>
 
     <div class="watermark">
@@ -238,46 +228,16 @@ async function searchData(){
     }
 
     /*
-    # ============= GET CAPTCHA TOKEN =============
+    # ============= GET TURNSTILE TOKEN =============
     */
-
-    let recaptchaToken = "";
-
-    try{
-
-        recaptchaToken = grecaptcha.getResponse();
-
-    }catch{
-
-        result.innerHTML = `
-            <div class="card">
-                reCAPTCHA belum ready
-            </div>
-        `;
-
-        return;
-
-    }
 
     const cloudflareToken = document.querySelector(
         'input[name="cf-turnstile-response"]'
     )?.value || "";
 
     /*
-    # ============= VALIDASI CAPTCHA =============
+    # ============= VALIDASI TURNSTILE =============
     */
-
-    if(!recaptchaToken){
-
-        result.innerHTML = `
-            <div class="card">
-                reCAPTCHA wajib
-            </div>
-        `;
-
-        return;
-
-    }
 
     if(!cloudflareToken){
 
@@ -320,21 +280,16 @@ async function searchData(){
 
                 body:JSON.stringify({
                     search,
-                    recaptchaToken,
                     cloudflareToken
                 })
             }
         );
 
         /*
-        # ============= RAW TEXT =============
+        # ============= RAW RESPONSE =============
         */
 
         const rawText = await response.text();
-
-        /*
-        # ============= VALIDASI JSON =============
-        */
 
         let data = null;
 
@@ -356,7 +311,7 @@ async function searchData(){
         }
 
         /*
-        # ============= STATUS FALSE =============
+        # ============= ERROR RESPONSE =============
         */
 
         if(!data.status){
@@ -372,7 +327,7 @@ async function searchData(){
         }
 
         /*
-        # ============= DATA KOSONG =============
+        # ============= DATA EMPTY =============
         */
 
         if(!Array.isArray(data.result) || data.result.length === 0){
@@ -394,7 +349,7 @@ async function searchData(){
         result.innerHTML = "";
 
         /*
-        # ============= LOOP DATA =============
+        # ============= RENDER DATA =============
         */
 
         data.result.forEach(item => {
@@ -402,10 +357,6 @@ async function searchData(){
             const div = document.createElement("div");
 
             div.className = "card";
-
-            /*
-            # ============= VALID URL =============
-            */
 
             const infoUrl =
                 item.info_lain &&
@@ -418,10 +369,6 @@ async function searchData(){
             const imageUrl =
                 item.bukti &&
                 item.bukti.startsWith("https://top4top.io/");
-
-            /*
-            # ============= SAFE HTML =============
-            */
 
             div.innerHTML = `
 
@@ -488,16 +435,6 @@ async function searchData(){
 
         });
 
-        /*
-        # ============= RESET CAPTCHA =============
-        */
-
-        try{
-
-            grecaptcha.reset();
-
-        }catch{}
-
     }catch(err){
 
         result.innerHTML = `
@@ -509,6 +446,16 @@ async function searchData(){
     }finally{
 
         button.disabled = false;
+
+        /*
+        # ============= RESET TURNSTILE =============
+        */
+
+        try{
+
+            turnstile.reset();
+
+        }catch{}
 
     }
 
