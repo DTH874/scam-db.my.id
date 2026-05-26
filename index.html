@@ -1,13 +1,25 @@
+<!-- BY POLOSS -->
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>SCAMMER DB</title>
 
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script
+    src="https://www.google.com/recaptcha/api.js"
+    async
+    defer
+></script>
+
+<script
+    src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+    async
+    defer
+></script>
 
 <style>
 
@@ -20,7 +32,7 @@
 body{
     background:#0f172a;
     color:white;
-    font-family:Arial;
+    font-family:Arial,Helvetica,sans-serif;
     min-height:100vh;
     display:flex;
     justify-content:center;
@@ -32,14 +44,15 @@ body{
     width:100%;
     max-width:900px;
     background:#111827;
+    border:1px solid #1f2937;
     border-radius:15px;
     padding:25px;
-    border:1px solid #1f2937;
 }
 
 .title{
-    font-size:30px;
+    font-size:32px;
     margin-bottom:20px;
+    font-weight:bold;
 }
 
 .searchBox{
@@ -55,16 +68,22 @@ input{
     border-radius:10px;
     background:#1f2937;
     color:white;
+    font-size:15px;
 }
 
 button{
+    min-width:130px;
     padding:15px;
     border:none;
     border-radius:10px;
-    cursor:pointer;
     background:#2563eb;
     color:white;
-    min-width:120px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+button:hover{
+    opacity:.9;
 }
 
 .card{
@@ -72,6 +91,8 @@ button{
     background:#1f2937;
     border-radius:12px;
     padding:20px;
+    line-height:1.7;
+    overflow-wrap:break-word;
 }
 
 img{
@@ -83,11 +104,21 @@ img{
 
 a{
     color:#60a5fa;
+    text-decoration:none;
 }
 
 .watermark{
-    margin-top:20px;
+    margin-top:25px;
     opacity:.5;
+    text-align:center;
+}
+
+#result{
+    margin-top:20px;
+}
+
+.loading{
+    opacity:.7;
 }
 
 </style>
@@ -108,9 +139,13 @@ a{
             id="search"
             placeholder="628xxxx atau nama"
             maxlength="100"
+            autocomplete="off"
         >
 
-        <button onclick="searchData()">
+        <button
+            id="searchBtn"
+            onclick="searchData()"
+        >
             SEARCH
         </button>
 
@@ -118,13 +153,16 @@ a{
 
     <br>
 
+    <!-- ============= CLOUDFLARE TURNSTILE ============= -->
+
     <div
         class="cf-turnstile"
         data-sitekey="0x4AAAAAADWGW6loSQy9qZqQ"
-        id="cf-box"
     ></div>
 
     <br>
+
+    <!-- ============= GOOGLE RECAPTCHA ============= -->
 
     <div
         class="g-recaptcha"
@@ -141,82 +179,223 @@ a{
 
 <script>
 
+/*
+# ============= CLEAN INPUT =============
+*/
+
 function cleanInput(value){
 
-    return value
-        .replace(/[<>"'`;(){}]/g, "")
+    return String(value)
+        .replace(/[<>"'`;(){}[\]\\]/g,"")
+        .replace(/\s+/g," ")
         .trim();
 
 }
+
+/*
+# ============= ESCAPE HTML =============
+*/
+
+function escapeHtml(text){
+
+    return String(text)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+/*
+# ============= SEARCH DATA =============
+*/
 
 async function searchData(){
 
     const result = document.getElementById("result");
 
+    const button = document.getElementById("searchBtn");
+
     const search = cleanInput(
         document.getElementById("search").value
     );
 
+    /*
+    # ============= VALIDASI INPUT =============
+    */
+
     if(!search){
 
-        result.innerHTML = "Input kosong";
+        result.innerHTML = `
+            <div class="card">
+                Input kosong
+            </div>
+        `;
+
         return;
 
     }
 
-    const recaptchaToken = grecaptcha.getResponse();
+    /*
+    # ============= GET CAPTCHA TOKEN =============
+    */
+
+    let recaptchaToken = "";
+
+    try{
+
+        recaptchaToken = grecaptcha.getResponse();
+
+    }catch{
+
+        result.innerHTML = `
+            <div class="card">
+                reCAPTCHA belum ready
+            </div>
+        `;
+
+        return;
+
+    }
 
     const cloudflareToken = document.querySelector(
         'input[name="cf-turnstile-response"]'
-    )?.value;
+    )?.value || "";
+
+    /*
+    # ============= VALIDASI CAPTCHA =============
+    */
 
     if(!recaptchaToken){
 
-        result.innerHTML = "reCAPTCHA wajib";
+        result.innerHTML = `
+            <div class="card">
+                reCAPTCHA wajib
+            </div>
+        `;
+
         return;
 
     }
 
     if(!cloudflareToken){
 
-        result.innerHTML = "Cloudflare wajib";
+        result.innerHTML = `
+            <div class="card">
+                Cloudflare Turnstile wajib
+            </div>
+        `;
+
         return;
 
     }
 
-    result.innerHTML = "Loading...";
+    /*
+    # ============= LOADING =============
+    */
+
+    button.disabled = true;
+
+    result.innerHTML = `
+        <div class="card loading">
+            Loading...
+        </div>
+    `;
 
     try{
 
-        const response = await fetch("/api/search",{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
-            },
-            body:JSON.stringify({
-                search,
-                recaptchaToken,
-                cloudflareToken
-            })
-        });
+        /*
+        # ============= FETCH API =============
+        */
 
-        const data = await response.json();
+        const response = await fetch(
+            "/api/search",
+            {
+                method:"POST",
+
+                headers:{
+                    "Content-Type":"application/json"
+                },
+
+                body:JSON.stringify({
+                    search,
+                    recaptchaToken,
+                    cloudflareToken
+                })
+            }
+        );
+
+        /*
+        # ============= RAW TEXT =============
+        */
+
+        const rawText = await response.text();
+
+        /*
+        # ============= VALIDASI JSON =============
+        */
+
+        let data = null;
+
+        try{
+
+            data = JSON.parse(rawText);
+
+        }catch{
+
+            result.innerHTML = `
+                <div class="card">
+                    API ERROR<br><br>
+                    ${escapeHtml(rawText)}
+                </div>
+            `;
+
+            return;
+
+        }
+
+        /*
+        # ============= STATUS FALSE =============
+        */
 
         if(!data.status){
 
-            result.innerHTML = data.message;
+            result.innerHTML = `
+                <div class="card">
+                    ${escapeHtml(data.message || "Unknown error")}
+                </div>
+            `;
+
             return;
 
         }
 
-        if(data.result.length === 0){
+        /*
+        # ============= DATA KOSONG =============
+        */
 
-            result.innerHTML = "Data tidak ditemukan";
+        if(!Array.isArray(data.result) || data.result.length === 0){
+
+            result.innerHTML = `
+                <div class="card">
+                    Data tidak ditemukan
+                </div>
+            `;
+
             return;
 
         }
+
+        /*
+        # ============= CLEAR RESULT =============
+        */
 
         result.innerHTML = "";
+
+        /*
+        # ============= LOOP DATA =============
+        */
 
         data.result.forEach(item => {
 
@@ -224,39 +403,112 @@ async function searchData(){
 
             div.className = "card";
 
+            /*
+            # ============= VALID URL =============
+            */
+
+            const infoUrl =
+                item.info_lain &&
+                (
+                    item.info_lain.startsWith("https://pastebin.com/")
+                    ||
+                    item.info_lain.startsWith("https://pastefy.app/")
+                );
+
+            const imageUrl =
+                item.bukti &&
+                item.bukti.startsWith("https://top4top.io/");
+
+            /*
+            # ============= SAFE HTML =============
+            */
+
             div.innerHTML = `
-                <b>Nomor HP:</b> ${item.nomor_hp}<br><br>
 
-                <b>Nama:</b> ${item.nama}<br><br>
+                <b>Nomor HP:</b><br>
+                ${escapeHtml(item.nomor_hp || "-")}
 
-                <b>Nominal:</b> ${item.nominal}<br><br>
+                <br><br>
 
-                <b>Alasan:</b> ${item.alasan}<br><br>
+                <b>Nama:</b><br>
+                ${escapeHtml(item.nama || "-")}
 
-                <b>Info Lain:</b>
-                ${item.info_lain
-                    ? `<a href="${item.info_lain}" target="_blank">OPEN</a>`
+                <br><br>
+
+                <b>Nominal:</b><br>
+                ${escapeHtml(item.nominal || "-")}
+
+                <br><br>
+
+                <b>Alasan:</b><br>
+                ${escapeHtml(item.alasan || "-")}
+
+                <br><br>
+
+                <b>Info Lain:</b><br>
+
+                ${
+                    infoUrl
+                    ? `
+                        <a
+                            href="${escapeHtml(item.info_lain)}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            OPEN LINK
+                        </a>
+                    `
                     : "-"
                 }
+
                 <br><br>
 
                 <b>Bukti:</b><br>
-                ${item.bukti
-                    ? `<img src="${item.bukti}">`
+
+                ${
+                    imageUrl
+                    ? `
+                        <img
+                            src="${escapeHtml(item.bukti)}"
+                            loading="lazy"
+                            referrerpolicy="no-referrer"
+                        >
+                    `
                     : "-"
                 }
+
                 <br><br>
 
-                <b>Tanggal:</b> ${item.tanggal}
+                <b>Tanggal:</b><br>
+                ${escapeHtml(item.tanggal || "-")}
+
             `;
 
             result.appendChild(div);
 
         });
 
+        /*
+        # ============= RESET CAPTCHA =============
+        */
+
+        try{
+
+            grecaptcha.reset();
+
+        }catch{}
+
     }catch(err){
 
-        result.innerHTML = err.message;
+        result.innerHTML = `
+            <div class="card">
+                ${escapeHtml(err.message)}
+            </div>
+        `;
+
+    }finally{
+
+        button.disabled = false;
 
     }
 
