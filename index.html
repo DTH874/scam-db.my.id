@@ -3,148 +3,45 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SUPABASE TEST</title>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-
-        body{
-            background:#0f172a;
-            color:white;
-            font-family:Arial;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            min-height:100vh;
-        }
-
-        .box{
-            width:350px;
-            background:#111827;
-            padding:20px;
-            border-radius:12px;
-        }
-
-        input,button{
-            width:100%;
-            padding:12px;
-            margin-top:10px;
-            border:none;
-            border-radius:8px;
-        }
-
-        input{
-            background:#1f2937;
-            color:white;
-        }
-
-        button{
-            background:#2563eb;
-            color:white;
-            cursor:pointer;
-        }
-
-        #status{
-            margin-top:15px;
-            word-break:break-word;
-        }
-
-    </style>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUPABASE TEST</title>
 </head>
 <body>
 
-<div class="box">
+<input type="text" id="name" placeholder="Nama">
 
-    <h2>SUPABASE TEST</h2>
+<button onclick="addData()">
+ADD DATA
+</button>
 
-    <input
-        type="text"
-        id="name"
-        placeholder="Nama"
-    >
-
-    <button onclick="addData()">
-        ADD DATA
-    </button>
-
-    <div id="status"></div>
-
-    <br>
-
-    <small>BY POLOSS</small>
-
-</div>
+<pre id="status"></pre>
 
 <script>
 
-let supabaseClient = null;
-
-/*
-# ============= LOAD ENV DARI API VERCEL =============
-*/
-
-async function loadEnv(){
-
-    const response = await fetch("/api/env_proses");
-
-    const env = await response.json();
-
-    supabaseClient = supabase.createClient(
-        env.supabase_url,
-        env.supabase_key
-    );
-
-}
-
-loadEnv();
-
-/*
-# ============= ADD DATA =============
-*/
-
 async function addData(){
-
-    const status = document.getElementById("status");
 
     const name = document.getElementById("name").value.trim();
 
-    if(!name){
-        status.innerHTML = "Nama kosong";
-        return;
-    }
-
-    if(!supabaseClient){
-        status.innerHTML = "Supabase belum ready";
-        return;
-    }
+    const status = document.getElementById("status");
 
     status.innerHTML = "Loading...";
 
     try{
 
-        const { data, error } = await supabaseClient
-            .from("test_data")
-            .insert([
-                {
-                    name:name
-                }
-            ])
-            .select();
+        const response = await fetch("/api/add_data",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                name:name
+            })
+        });
 
-        if(error){
-            status.innerHTML = error.message;
-            return;
-        }
+        const result = await response.json();
 
-        status.innerHTML = `
-            SUCCESS
-            <br><br>
-            ${JSON.stringify(data)}
-        `;
+        status.innerHTML = JSON.stringify(result,null,2);
 
     }catch(err){
 
